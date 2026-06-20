@@ -238,9 +238,7 @@
       border-radius: 22px;
       border: 1px solid var(--border);
       background: #000;
-      margin: 14px auto 0;
-      width: min(100%, 390px);
-      aspect-ratio: 1 / 1;
+      margin-top: 14px;
     }
 
     #reader {
@@ -254,13 +252,6 @@
       border-radius: 22px;
       pointer-events: none !important;
     }
-
-    /* Cámara visualmente cuadrada sin alterar el lienzo interno del lector.
-       Así se conserva la compatibilidad con iPhone y Android. */
-    .scanner-wrap #reader {
-      width: 100%;
-    }
-
 
     .scanner-wrap,
     #reader {
