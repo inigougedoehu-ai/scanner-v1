@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Escáner de entradas</title>
+
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    :root {
+      --bg: #020617;
+      --card: #0f172a;
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --border: rgba(255,255,255,.12);
+      --blue: #2563eb;
+      --ok: #16a34a;
+      --warn: #d97706;
+      --bad: #dc2626;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(37,99,235,.35), transparent 35%),
+        radial-gradient(circle at bottom right, rgba(22,163,74,.18), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .app {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 14px;
+      padding-bottom: 28px;
+    }
+
+    .card {
+      background: rgba(15,23,42,.96);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 18px;
+      box-shadow: 0 22px 60px rgba(0,0,0,.35);
+      margin-bottom: 14px;
+    }
+
+    .title {
+      font-size: 30px;
+      line-height: 1.05;
+      font-weight: 950;
+      letter-spacing: -.04em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 16px;
+      margin-top: 6px;
+    }
+
+    input {
+      width: 100%;
+      min-height: 56px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.09);
+      color: white;
+      font-size: 22px;
+      padding: 14px;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      min-height: 58px;
+      border: 0;
+      border-radius: 17px;
+      background: var(--blue);
+      color: white;
+      font-size: 19px;
+      font-weight: 850;
+      padding: 14px;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: rgba(255,255,255,.12);
+      border: 1px solid var(--border);
+    }
+
+    button.next-btn {
+      background: var(--blue);
+      font-size: 23px;
+      min-height: 68px;
+    }
+
+    .mt {
+      margin-top: 14px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .scanner-wrap {
+      overflow: hidden;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: black;
+    }
+
+    #reader {
+      width: 100%;
+      min-height: 430px;
+      background: black;
+    }
+
+    #reader video {
+      border-radius: 22px;
+      object-fit: cover !important;
+    }
+
+    .result {
+      text-align: center;
+      border-radius: 24px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      white-space: pre-line;
+      min-height: 70vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .result.ok {
+      background: rgba(22,163,74,.22);
+      border-color: rgba(34,197,94,.65);
+    }
+
+    .result.duplicate {
+      background: rgba(217,119,6,.24);
+      border-color: rgba(251,191,36,.65);
+    }
+
+    .result.invalid,
+    .result.error {
+      background: rgba(220,38,38,.24);
+      border-color: rgba(248,113,113,.65);
+    }
+
+    .result.checking {
+      background: rgba(37,99,235,.18);
+      border-color: rgba(96,165,250,.55);
+    }
+
+    .icon {
+      font-size: 68px;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+
+    .result-title {
+      font-size: 34px;
+      font-weight: 950;
+      letter-spacing: -.04em;
+    }
+
+    .name {
+      font-size: 23px;
+      font-weight: 850;
+      margin-top: 10px;
+    }
+
+    .seat {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .seat-box {
+      background: rgba(255,255,255,.12);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 15px 10px;
+    }
+
+    .seat-label {
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .seat-value {
+      font-size: 46px;
+      font-weight: 950;
+      line-height: 1.05;
+      margin-top: 3px;
+      text-transform: uppercase;
+    }
+
+    .time-box {
+      margin-top: 18px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 14px;
+    }
+
+    .time-label {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .time-value {
+      font-size: 26px;
+      font-weight: 950;
+      margin-top: 4px;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      margin-top: 12px;
+      word-break: break-word;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .stat {
+      background: rgba(255,255,255,.09);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 10px 6px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 28px;
+      font-weight: 950;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .sync-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .sync-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.09);
+      border: 1px solid var(--border);
+      font-weight: 800;
+    }
+
+    .sync-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #94a3b8;
+    }
+
+    .sync-badge.online .sync-dot { background: #22c55e; }
+    .sync-badge.syncing .sync-dot { background: #f59e0b; }
+    .sync-badge.offline .sync-dot { background: #ef4444; }
+
+    .notice {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(245,158,11,.14);
+      border: 1px solid rgba(245,158,11,.45);
+      color: #fde68a;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div id="loginView" class="card">
+      <div class="title">Escáner de entradas</div>
+      <div class="subtitle">Control rápido de acceso</div>
+
+      <div class="mt">
+        <input id="pinInput" type="password" inputmode="numeric" placeholder="Clave de acceso" />
+      </div>
+
+      <div class="mt">
+        <button onclick="login()">Entrar</button>
+      </div>
+
+      <p class="small mt">
+        La clave se guarda solo en este móvil.
+      </p>
+    </div>
+
+    <div id="scannerView" class="hidden">
+      <div class="card">
+        <div class="title">Escanear</div>
+        <div class="subtitle">Apunta al QR. Al leerlo pasará a la pantalla de datos.</div>
+
+        <div class="stats mt">
+          <div class="stat">
+            <div class="stat-number" id="totalStat">-</div>
+            <div class="stat-label">Total</div>
+          </div>
+          <div class="stat">
+            <div class="stat-number" id="usedStat">-</div>
+            <div class="stat-label">Dentro</div>
+          </div>
+          <div class="stat">
+            <div class="stat-number" id="pendingStat">-</div>
+            <div class="stat-label">Pendientes</div>
+          </div>
+        </div>
+
+        <div class="sync-line">
+          <div id="syncBadge" class="sync-badge syncing">
+            <span class="sync-dot"></span>
+            <span id="syncText">Sincronizando...</span>
+          </div>
+          <span id="lastSyncText">Sin datos</span>
+        </div>
+
+        <div id="pendingNotice" class="notice hidden">
+          Hay accesos pendientes de confirmar con Google Sheets. Se reintentarán automáticamente.
+        </div>
+
+        <div class="scanner-wrap mt">
+          <div id="reader"></div>
+        </div>
+
+        <div class="mt">
+          <button class="secondary" onclick="restartScanner()">Reiniciar cámara</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="resultView" class="hidden">
+      <div id="resultBox" class="result checking">
+        <div class="icon">⏳</div>
+        <div class="result-title">Comprobando...</div>
+      </div>
+
+      <div class="mt">
+        <button class="next-btn" onclick="nextScan()">Siguiente</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyXGG5TQd8qmr7yS_HV2OuVGHpf3slXDhi1EJXJPR_hh0kqU7Iyo3Lwz-dLtHwJ4n52/exec'
+    const LOCAL_TICKETS_KEY = 'scanner_ticket_cache_v2'
+    const LOCAL_QUEUE_KEY = 'scanner_checkin_queue_v2'
+    const LOCAL_SYNC_KEY = 'scanner_last_sync_v2'
+    const SYNC_INTERVAL_MS = 10000
+
+    let pin = localStorage.getItem('scanner_pin') || ''
+    let deviceId = localStorage.getItem('scanner_device_id') || ''
+    let html5QrCode = null
+    let scannerStarted = false
+    let scannerPaused = false
+    let isProcessing = false
+    let lastCode = ''
+    let lastCodeTime = 0
+    let audioCtx = null
+    let tickets = {}
+    let queue = []
+    let lastServerTime = Number(localStorage.getItem(LOCAL_SYNC_KEY) || 0)
+    let syncInProgress = false
+    let syncTimer = null
+    let currentResultCode = ''
+
+    if (!deviceId) {
+      deviceId = Math.random().toString(36).slice(2, 8).toUpperCase()
+      localStorage.setItem('scanner_device_id', deviceId)
+    }
+
+    window.addEventListener('load', () => {
+      restoreLocalState()
+      if (pin) {
+        initialiseWithPin(false)
+      }
+    })
+
+    window.addEventListener('online', () => {
+      setSyncStatus('syncing', 'Reconectando...')
+      syncNow(true)
+    })
+
+    window.addEventListener('offline', () => {
+      setSyncStatus('offline', 'Sin conexión')
+    })
+
+    function restoreLocalState() {
+      try { tickets = JSON.parse(localStorage.getItem(LOCAL_TICKETS_KEY) || '{}') || {} } catch (e) { tickets = {} }
+      try { queue = JSON.parse(localStorage.getItem(LOCAL_QUEUE_KEY) || '[]') || [] } catch (e) { queue = [] }
+      renderStats()
+      updatePendingNotice()
+    }
+
+    function persistLocalState() {
+      localStorage.setItem(LOCAL_TICKETS_KEY, JSON.stringify(tickets))
+      localStorage.setItem(LOCAL_QUEUE_KEY, JSON.stringify(queue))
+      localStorage.setItem(LOCAL_SYNC_KEY, String(lastServerTime || 0))
+    }
+
+    function login() {
+      const value = document.getElementById('pinInput').value.trim()
+      if (!value) {
+        alert('Introduce la clave.')
+        return
+      }
+
+      pin = value
+      unlockAudio()
+      initialiseWithPin(true)
+    }
+
+    function initialiseWithPin(fromLogin) {
+      setSyncStatus('syncing', 'Cargando entradas...')
+
+      callAppsScript('snapshot', { pin }, (res) => {
+        if (!res || res.status !== 'OK') {
+          if (fromLogin) alert(res && res.message ? res.message : 'No se ha podido validar la clave.')
+          pin = ''
+          localStorage.removeItem('scanner_pin')
+          setSyncStatus('offline', 'Clave incorrecta')
+          return
+        }
+
+        localStorage.setItem('scanner_pin', pin)
+        applySnapshot(res)
+        showScanner()
+        startSyncLoop()
+      }, () => {
+        if (Object.keys(tickets).length > 0 && pin) {
+          localStorage.setItem('scanner_pin', pin)
+          showScanner()
+          startSyncLoop()
+          setSyncStatus('offline', 'Modo local')
+        } else {
+          alert('No se ha podido descargar la lista de entradas. Comprueba la conexión.')
+        }
+      })
+    }
+
+    function applySnapshot(res) {
+      const next = {}
+      ;(res.tickets || []).forEach(t => {
+        const existing = tickets[t.code]
+        next[t.code] = {
+          ...t,
+          pending: existing && existing.pending && !t.used,
+          localRequestId: existing ? existing.localRequestId || '' : ''
+        }
+      })
+      tickets = next
+      lastServerTime = Number(res.serverTime || Date.now())
+      persistLocalState()
+      renderStats()
+      updatePendingNotice()
+      setSyncStatus('online', 'Sincronizado')
+      renderLastSync()
+    }
+
+    function startSyncLoop() {
+      if (syncTimer) clearInterval(syncTimer)
+      syncTimer = setInterval(() => syncNow(false), SYNC_INTERVAL_MS)
+      setTimeout(() => syncNow(false), 1200)
+    }
+
+    function syncNow(forceSnapshot) {
+      if (syncInProgress || !pin || !navigator.onLine) return
+      syncInProgress = true
+      setSyncStatus('syncing', 'Sincronizando...')
+
+      const finish = () => {
+        syncInProgress = false
+        renderLastSync()
+      }
+
+      flushQueue(() => {
+        const action = forceSnapshot || !lastServerTime ? 'snapshot' : 'changes'
+        const params = action === 'snapshot' ? { pin } : { pin, since: lastServerTime }
+
+        callAppsScript(action, params, (res) => {
+          if (!res || res.status !== 'OK') {
+            setSyncStatus('offline', 'Error de sincronización')
+            finish()
+            return
+          }
+
+          if (action === 'snapshot') {
+            applySnapshot(res)
+          } else {
+            applyChanges(res)
+          }
+
+          setSyncStatus('online', 'Sincronizado')
+          finish()
+        }, () => {
+          setSyncStatus('offline', 'Sin conexión')
+          finish()
+        })
+      })
+    }
+
+    function applyChanges(res) {
+      ;(res.changes || []).forEach(change => {
+        const current = tickets[change.code] || {}
+        tickets[change.code] = {
+          ...current,
+          ...change,
+          pending: false,
+          localRequestId: ''
+        }
+        queue = queue.filter(item => item.code !== change.code)
+      })
+
+      lastServerTime = Number(res.serverTime || Date.now())
+      persistLocalState()
+      renderStats()
+      updatePendingNotice()
+    }
+
+    function flushQueue(done) {
+      const item = queue.find(q => !q.sending)
+      if (!item) { done(); return }
+
+      item.sending = true
+      persistLocalState()
+
+      callAppsScript('checkin', {
+        code: item.code,
+        pin,
+        checkedBy: 'Escáner ' + deviceId,
+        requestId: item.requestId
+      }, (res) => {
+        item.sending = false
+        handleServerConfirmation(item, res)
+        setTimeout(() => flushQueue(done), 0)
+      }, () => {
+        item.sending = false
+        item.attempts = Number(item.attempts || 0) + 1
+        persistLocalState()
+        done()
+      })
+    }
+
+    function handleServerConfirmation(item, res) {
+      const ticket = tickets[item.code]
+
+      if (!ticket) {
+        queue = queue.filter(q => q.requestId !== item.requestId)
+        persistLocalState()
+        return
+      }
+
+      if (res && (res.status === 'OK' || res.status === 'CONFIRMED')) {
+        Object.assign(ticket, {
+          used: true,
+          pending: false,
+          checkinAt: res.checkinAt || ticket.checkinAt,
+          checkinEpoch: Number(res.checkinEpoch || ticket.checkinEpoch || Date.now()),
+          checkinBy: res.checkinBy || ticket.checkinBy,
+          localRequestId: ''
+        })
+        queue = queue.filter(q => q.requestId !== item.requestId)
+      } else if (res && res.status === 'DUPLICATE') {
+        Object.assign(ticket, {
+          used: true,
+          pending: false,
+          checkinAt: res.checkinAt || ticket.checkinAt,
+          checkinEpoch: Number(res.checkinEpoch || ticket.checkinEpoch || Date.now()),
+          checkinBy: res.checkinBy || ticket.checkinBy,
+          localRequestId: ''
+        })
+        queue = queue.filter(q => q.requestId !== item.requestId)
+
+        if (currentResultCode === item.code) {
+          showResult({ ...ticket, status: 'DUPLICATE', message: 'Conflicto: esta entrada ya se había utilizado.' })
+        }
+      } else if (res && res.status === 'INVALID') {
+        ticket.used = false
+        ticket.pending = false
+        ticket.localRequestId = ''
+        queue = queue.filter(q => q.requestId !== item.requestId)
+
+        if (currentResultCode === item.code) {
+          showResult({ status: 'INVALID', code: item.code, message: res.message || 'Entrada no válida.' })
+        }
+      } else {
+        item.attempts = Number(item.attempts || 0) + 1
+      }
+
+      persistLocalState()
+      renderStats()
+      updatePendingNotice()
+    }
+
+    function unlockAudio() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+        if (audioCtx.state === 'suspended') audioCtx.resume()
+      } catch (e) {}
+    }
+
+    async function showScanner() {
+      document.getElementById('loginView').classList.add('hidden')
+      document.getElementById('resultView').classList.add('hidden')
+      document.getElementById('scannerView').classList.remove('hidden')
+      currentResultCode = ''
+      isProcessing = false
+      lastCode = ''
+      lastCodeTime = 0
+      renderStats()
+
+      if (!scannerStarted) await startScanner()
+      else resumeScanner()
+    }
+
+    function showResultScreen() {
+      document.getElementById('loginView').classList.add('hidden')
+      document.getElementById('scannerView').classList.add('hidden')
+      document.getElementById('resultView').classList.remove('hidden')
+    }
+
+    async function startScanner() {
+      try {
+        if (!html5QrCode) {
+          html5QrCode = new Html5Qrcode('reader', {
+            formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+            verbose: false
+          })
+        }
+
+        await html5QrCode.start(
+          { facingMode: 'environment' },
+          {
+            fps: 30,
+            disableFlip: true,
+            qrbox: (w, h) => {
+              const size = Math.floor(Math.min(w, h) * 0.92)
+              return { width: size, height: size }
+            },
+            videoConstraints: {
+              facingMode: 'environment',
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              advanced: [{ focusMode: 'continuous' }, { exposureMode: 'continuous' }]
+            }
+          },
+          onScanSuccess,
+          () => {}
+        )
+
+        scannerStarted = true
+        scannerPaused = false
+      } catch (err) {
+        showResultScreen()
+        showError('No se ha podido abrir la cámara.\n' + (err.message || err))
+      }
+    }
+
+    function pauseScanner() {
+      try {
+        if (html5QrCode && scannerStarted && !scannerPaused) {
+          html5QrCode.pause(true)
+          scannerPaused = true
+        }
+      } catch (e) {}
+    }
+
+    function resumeScanner() {
+      try {
+        if (html5QrCode && scannerStarted && scannerPaused) {
+          html5QrCode.resume()
+          scannerPaused = false
+        }
+      } catch (e) { restartScanner() }
+    }
+
+    async function stopScannerHard() {
+      if (html5QrCode) {
+        try { await html5QrCode.stop() } catch (e) {}
+      }
+      scannerStarted = false
+      scannerPaused = false
+    }
+
+    function onScanSuccess(decodedText) {
+      const code = normalizeCode(decodedText)
+      const now = Date.now()
+      if (!code || isProcessing) return
+      if (code === lastCode && now - lastCodeTime < 4500) return
+
+      lastCode = code
+      lastCodeTime = now
+      isProcessing = true
+      pauseScanner()
+      showResultScreen()
+      processLocalCheckIn(code)
+      isProcessing = false
+    }
+
+    function processLocalCheckIn(code) {
+      currentResultCode = code
+      const ticket = tickets[code]
+
+      if (!ticket) {
+        showResult({ status: 'INVALID', code, message: 'El código no corresponde a ninguna entrada cargada.' })
+        return
+      }
+
+      if (ticket.used || ticket.pending) {
+        showResult({ ...ticket, status: 'DUPLICATE', message: ticket.pending ? 'Esta entrada se acaba de registrar en este dispositivo.' : 'Esta entrada ya había sido utilizada.' })
+        return
+      }
+
+      const requestId = deviceId + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7)
+      const localNow = new Date()
+
+      Object.assign(ticket, {
+        used: true,
+        pending: true,
+        localRequestId: requestId,
+        checkinAt: localNow.toLocaleString('es-ES'),
+        checkinEpoch: localNow.getTime(),
+        checkinBy: 'Escáner ' + deviceId
+      })
+
+      queue.push({
+        requestId,
+        code,
+        createdAt: Date.now(),
+        attempts: 0,
+        sending: false
+      })
+
+      persistLocalState()
+      renderStats()
+      updatePendingNotice()
+      showResult({ ...ticket, status: 'OK', message: 'Acceso permitido', localInstant: true })
+      setTimeout(() => syncNow(false), 50)
+    }
+
+    function nextScan() { showScanner() }
+
+    function renderStats() {
+      const list = Object.values(tickets)
+      const total = list.length
+      const used = list.filter(t => t.used || t.pending).length
+      document.getElementById('totalStat').textContent = total || '-'
+      document.getElementById('usedStat').textContent = total ? used : '-'
+      document.getElementById('pendingStat').textContent = total ? Math.max(total - used, 0) : '-'
+    }
+
+    function updatePendingNotice() {
+      const notice = document.getElementById('pendingNotice')
+      if (!notice) return
+      notice.classList.toggle('hidden', queue.length === 0)
+      if (queue.length > 0) {
+        notice.textContent = queue.length === 1
+          ? 'Hay 1 acceso pendiente de confirmar con Google Sheets. Se reintentará automáticamente.'
+          : 'Hay ' + queue.length + ' accesos pendientes de confirmar con Google Sheets. Se reintentarán automáticamente.'
+      }
+    }
+
+    function setSyncStatus(mode, text) {
+      const badge = document.getElementById('syncBadge')
+      const label = document.getElementById('syncText')
+      if (!badge || !label) return
+      badge.className = 'sync-badge ' + mode
+      label.textContent = text
+    }
+
+    function renderLastSync() {
+      const el = document.getElementById('lastSyncText')
+      if (!el) return
+      el.textContent = lastServerTime ? 'Última: ' + new Date().toLocaleTimeString('es-ES') : 'Sin datos'
+    }
+
+    function callAppsScript(action, params, success, failure) {
+      const callbackName = 'cb_' + Math.random().toString(36).slice(2)
+      const script = document.createElement('script')
+      let finished = false
+
+      const cleanup = () => {
+        if (finished) return
+        finished = true
+        clearTimeout(timeout)
+        try { delete window[callbackName] } catch (e) {}
+        script.remove()
+      }
+
+      window[callbackName] = response => {
+        cleanup()
+        if (success) success(response)
+      }
+
+      const url = new URL(APPS_SCRIPT_URL)
+      url.searchParams.set('action', action)
+      url.searchParams.set('callback', callbackName)
+      url.searchParams.set('_', Date.now())
+      Object.keys(params || {}).forEach(key => url.searchParams.set(key, params[key]))
+
+      script.src = url.toString()
+      script.onerror = () => {
+        cleanup()
+        if (failure) failure('No se ha podido conectar con el servidor.')
+      }
+
+      const timeout = setTimeout(() => {
+        cleanup()
+        if (failure) failure('El servidor ha tardado demasiado en responder.')
+      }, 15000)
+
+      document.body.appendChild(script)
+    }
+
+    function normalizeCode(raw) {
+      let text = String(raw || '').trim()
+      try {
+        const url = new URL(text)
+        const code = url.searchParams.get('code') || url.searchParams.get('codigo')
+        if (code) return code.trim().toUpperCase()
+        const parts = url.pathname.split('/').filter(Boolean)
+        if (parts.length > 0) return parts[parts.length - 1].trim().toUpperCase()
+      } catch (e) {}
+      return text.toUpperCase()
+    }
+
+    function showResult(res) {
+      let className = 'result error'
+      let icon = '❌'
+      let title = res.message || 'Error'
+
+      if (res.status === 'OK' || res.status === 'CONFIRMED') {
+        className = 'result ok'
+        icon = '✅'
+        title = 'Acceso permitido'
+        playSuccessBeep()
+      } else if (res.status === 'DUPLICATE') {
+        className = 'result duplicate'
+        icon = '⚠️'
+        title = 'Entrada ya utilizada'
+        playDuplicateBeep()
+      } else if (res.status === 'INVALID') {
+        className = 'result invalid'
+        icon = '❌'
+        title = 'Entrada no válida'
+        playErrorBeep()
+      } else {
+        playErrorBeep()
+      }
+
+      const fila = res.fila || '-'
+      const butaca = res.butaca || '-'
+      const hora = res.checkinAt || ''
+      const name = res.estudiante || res.nombre || ''
+      const zone = res.zona || ''
+      const pendingText = res.pending || res.localInstant ? '<div class="meta">Guardando en Google Sheets en segundo plano…</div>' : ''
+
+      const box = document.getElementById('resultBox')
+      box.className = className
+      box.innerHTML = `
+        <div>
+          <div class="icon">${icon}</div>
+          <div class="result-title">${escapeHtml(title)}</div>
+          ${name ? `<div class="name">${escapeHtml(name)}</div>` : ''}
+          ${zone ? `<div class="meta">${escapeHtml(zone)}</div>` : ''}
+          ${(res.status === 'OK' || res.status === 'CONFIRMED' || res.status === 'DUPLICATE') ? `
+            <div class="seat">
+              <div class="seat-box"><div class="seat-label">Fila</div><div class="seat-value">${escapeHtml(fila)}</div></div>
+              <div class="seat-box"><div class="seat-label">Butaca</div><div class="seat-value">${escapeHtml(butaca)}</div></div>
+            </div>
+          ` : ''}
+          ${hora ? `<div class="time-box"><div class="time-label">${res.status === 'DUPLICATE' ? 'Escaneada originalmente' : 'Hora de acceso'}</div><div class="time-value">${escapeHtml(hora)}</div></div>` : ''}
+          <div class="meta">${escapeHtml(res.code || '')}</div>
+          ${pendingText}
+        </div>
+      `
+    }
+
+    function showError(message) {
+      playErrorBeep()
+      const box = document.getElementById('resultBox')
+      box.className = 'result error'
+      box.innerHTML = `<div><div class="icon">❌</div><div class="result-title">Error</div><div class="meta">${escapeHtml(message)}</div></div>`
+    }
+
+    async function restartScanner() {
+      isProcessing = false
+      lastCode = ''
+      lastCodeTime = 0
+      await stopScannerHard()
+      await startScanner()
+    }
+
+    function playTone(frequency, duration, volume = 0.08) {
+      try {
+        unlockAudio()
+        if (!audioCtx) return
+        const oscillator = audioCtx.createOscillator()
+        const gainNode = audioCtx.createGain()
+        oscillator.type = 'sine'
+        oscillator.frequency.value = frequency
+        gainNode.gain.value = volume
+        oscillator.connect(gainNode)
+        gainNode.connect(audioCtx.destination)
+        const now = audioCtx.currentTime
+        oscillator.start(now)
+        oscillator.stop(now + duration)
+      } catch (e) {}
+    }
+
+    function playSuccessBeep() { playTone(950, 0.10, 0.08) }
+    function playDuplicateBeep() { playTone(700, 0.09, 0.08); setTimeout(() => playTone(700, 0.09, 0.08), 140) }
+    function playErrorBeep() { playTone(330, 0.16, 0.09) }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;')
+    }
+  </script>
+</body>
+</html>
