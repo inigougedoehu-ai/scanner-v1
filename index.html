@@ -250,6 +250,13 @@
     #reader video {
       object-fit: cover !important;
       border-radius: 22px;
+      pointer-events: none !important;
+    }
+
+    .scanner-wrap,
+    #reader {
+      position: relative;
+      z-index: 1;
     }
 
     .result {
@@ -519,7 +526,7 @@
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 6px;
-      z-index: 9999;
+      z-index: 2147483647;
       pointer-events: auto;
     }
 
@@ -533,7 +540,7 @@
       font-size: 11px;
       font-weight: 800;
       position: relative;
-      z-index: 10000;
+      z-index: 2147483647;
       touch-action: manipulation;
     }
 
@@ -759,10 +766,10 @@
   </div>
 
   <nav id="bottomNav" class="bottom-nav hidden">
-    <button type="button" id="navScanner" class="nav-btn active" onclick="showTab('scanner')"><span class="nav-icon">▣</span>Escanear</button>
-    <button type="button" id="navSearch" class="nav-btn" onclick="showTab('search')"><span class="nav-icon">⌕</span>Buscar</button>
-    <button type="button" id="navDashboard" class="nav-btn" onclick="showTab('dashboard')"><span class="nav-icon">▤</span>Resumen</button>
-    <button type="button" id="navSettings" class="nav-btn" onclick="showTab('settings')"><span class="nav-icon">⚙</span>Ajustes</button>
+    <button type="button" id="navScanner" class="nav-btn active" data-tab="scanner"><span class="nav-icon">▣</span>Escanear</button>
+    <button type="button" id="navSearch" class="nav-btn" data-tab="search"><span class="nav-icon">⌕</span>Buscar</button>
+    <button type="button" id="navDashboard" class="nav-btn" data-tab="dashboard"><span class="nav-icon">▤</span>Resumen</button>
+    <button type="button" id="navSettings" class="nav-btn" data-tab="settings"><span class="nav-icon">⚙</span>Ajustes</button>
   </nav>
 
   <div id="undoModal" class="modal hidden">
@@ -820,9 +827,41 @@
     let undoTargetCode = ''
     let audioCtx = null
 
-    window.addEventListener('load', initialiseApp)
+    window.addEventListener('load', () => {
+      bindBottomNavigation()
+      initialiseApp()
+    })
     window.addEventListener('online', () => syncNow(false))
     window.addEventListener('offline', () => setSyncStatus('offline', 'Sin conexión'))
+
+    function bindBottomNavigation() {
+      document.querySelectorAll('.nav-btn[data-tab]').forEach(button => {
+        let handledAt = 0
+
+        const openTab = event => {
+          event.preventDefault()
+          event.stopPropagation()
+
+          const now = Date.now()
+          if (now - handledAt < 350) return
+          handledAt = now
+
+          const tab = button.dataset.tab
+          changeTab(tab)
+        }
+
+        button.addEventListener('click', openTab, { passive: false })
+        button.addEventListener('touchend', openTab, { passive: false })
+        button.addEventListener('pointerup', openTab, { passive: false })
+      })
+    }
+
+    function changeTab(tab) {
+      showTab(tab).catch(error => {
+        console.error('Error al cambiar de pestaña:', error)
+        alert('No se ha podido abrir esta sección.')
+      })
+    }
 
     function initialiseApp() {
       loadLocalState()
@@ -952,19 +991,29 @@
     }
 
     async function showTab(tab) {
+      const validTabs = ['scanner', 'search', 'dashboard', 'settings']
+      if (!validTabs.includes(tab)) return
+
       document.getElementById('resultView').classList.add('hidden')
       document.getElementById('mainApp').classList.remove('hidden')
       document.getElementById('bottomNav').classList.remove('hidden')
 
-      ['scanner', 'search', 'dashboard', 'settings'].forEach(name => {
-        document.getElementById(name + 'Tab').classList.toggle('hidden', name !== tab)
-        document.getElementById('nav' + capitalize(name)).classList.toggle('active', name === tab)
+      validTabs.forEach(name => {
+        const section = document.getElementById(name + 'Tab')
+        const navButton = document.getElementById('nav' + capitalize(name))
+
+        if (section) section.classList.toggle('hidden', name !== tab)
+        if (navButton) navButton.classList.toggle('active', name === tab)
       })
+
+      window.scrollTo({ top: 0, behavior: 'instant' })
 
       if (tab === 'scanner') {
         await ensureScannerRunning()
       } else {
-        await stopScanner()
+        // No bloqueamos la apertura de la pestaña esperando a Safari.
+        // La cámara se detiene en segundo plano.
+        stopScanner().catch(error => console.warn('No se pudo detener la cámara:', error))
       }
 
       if (tab === 'search') renderSearchResults()
