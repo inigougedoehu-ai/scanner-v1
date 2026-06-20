@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#020617">
   <title>Control de entradas</title>
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <style>
     :root {
@@ -258,8 +258,7 @@
     }
 
     #reader > div,
-    #reader video,
-    #reader canvas {
+    #reader video {
       width: 100% !important;
       height: 100% !important;
       max-width: none !important;
@@ -680,7 +679,7 @@
           </div>
 
           <div class="grid2 mt">
-            <button type="button" class="btn secondary small" onclick="restartScanner()">Reiniciar cámara</button>
+            <button type="button" class="btn secondary small" onclick="switchCamera()">Cambiar cámara</button>
             <button type="button" class="btn secondary small" onclick="syncNow(true)">Forzar sincronización</button>
           </div>
         </div>
@@ -847,6 +846,8 @@
     let html5QrCode = null
     let scannerStarted = false
     let scannerPaused = false
+    let availableCameras = []
+    let selectedCameraIndex = 0
     let isProcessing = false
     let lastCode = ''
     let lastCodeTime = 0
@@ -1062,24 +1063,48 @@
         if (!html5QrCode) {
           html5QrCode = new Html5Qrcode('reader', {
             formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+            experimentalFeatures: {
+              useBarCodeDetectorIfSupported: true
+            },
             verbose: false
           })
         }
 
+        if (!availableCameras.length) {
+          try {
+            availableCameras = await Html5Qrcode.getCameras()
+
+            const rearCameras = availableCameras.filter(camera => {
+              const label = String(camera.label || '').toLowerCase()
+              return /back|rear|environment|trasera/.test(label) &&
+                !/ultra|telephoto|teleobjetivo/.test(label)
+            })
+
+            if (rearCameras.length) {
+              const preferredId = rearCameras[rearCameras.length - 1].id
+              const index = availableCameras.findIndex(camera => camera.id === preferredId)
+              if (index >= 0) selectedCameraIndex = index
+            } else if (availableCameras.length > 1) {
+              selectedCameraIndex = availableCameras.length - 1
+            }
+          } catch (cameraError) {
+            availableCameras = []
+          }
+        }
+
+        const cameraSource = availableCameras.length
+          ? availableCameras[selectedCameraIndex].id
+          : { facingMode: { exact: 'environment' } }
+
         await html5QrCode.start(
-          { facingMode: 'environment' },
+          cameraSource,
           {
-            fps: 28,
-            disableFlip: true,
+            fps: 10,
+            aspectRatio: 1,
+            disableFlip: false,
             qrbox: (w, h) => {
-              const size = Math.floor(Math.min(w, h) * .76)
+              const size = Math.floor(Math.min(w, h) * .90)
               return { width: size, height: size }
-            },
-            videoConstraints: {
-              facingMode: 'environment',
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-              advanced: [{ focusMode: 'continuous' }]
             }
           },
           onScanSuccess,
@@ -1111,6 +1136,24 @@
     async function restartScanner() {
       await stopScanner()
       await startScanner()
+    }
+
+    async function switchCamera() {
+      if (!availableCameras.length) {
+        try {
+          availableCameras = await Html5Qrcode.getCameras()
+        } catch (error) {
+          availableCameras = []
+        }
+      }
+
+      if (availableCameras.length < 2) {
+        await restartScanner()
+        return
+      }
+
+      selectedCameraIndex = (selectedCameraIndex + 1) % availableCameras.length
+      await restartScanner()
     }
 
     function onScanSuccess(decodedText) {
