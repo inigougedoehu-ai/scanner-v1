@@ -6,6 +6,8 @@
   <meta name="theme-color" content="#07111f">
   <title>Administración · Control de entradas</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <style>
     :root{
       --bg:#06111f;--panel:#0d1b2c;--panel2:#122338;--text:#f8fafc;--muted:#9db0c7;
@@ -39,8 +41,14 @@
     .log{display:grid;grid-template-columns:150px 100px 1fr 160px;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13px}.log:last-child{border-bottom:0}.log .result{font-weight:900}.log .result.OK{color:#8ff0ad}.log .result.DUPLICATE{color:#ffd083}.log .result.INVALID,.log .result.ERROR{color:#ffaaa9}
     .split{display:flex;align-items:center;gap:16px}.ring{--p:0;width:118px;height:118px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--cyan) calc(var(--p)*1%),rgba(255,255,255,.08) 0)}.ring:before{content:"";width:86px;height:86px;border-radius:50%;background:var(--panel);position:absolute}.ring strong{position:relative;font-size:22px}.danger-zone{border-color:rgba(239,68,68,.38);background:rgba(239,68,68,.055)}
     .toast{position:fixed;right:18px;bottom:18px;max-width:380px;padding:14px 16px;border-radius:15px;background:#152840;border:1px solid var(--line);box-shadow:0 18px 54px rgba(0,0,0,.4);z-index:50}.toast.ok{border-color:rgba(34,197,94,.5)}.toast.bad{border-color:rgba(239,68,68,.5)}
+    .audit-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .audit-console{max-height:280px;overflow:auto;background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:15px;padding:12px;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:#c8d6e5}
+    .audit-console div{padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+    .audit-console div:last-child{border-bottom:0}
+    .audit-error-row td{background:rgba(239,68,68,.06)}
+    .audit-ok-row td{background:rgba(34,197,94,.035)}
     .mobile-nav{display:none}
-    @media(max-width:980px){.app{grid-template-columns:1fr}.sidebar{display:none}.main{padding:15px;padding-bottom:88px}.grid4{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}.topbar{align-items:flex-start}.mobile-nav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;bottom:0;left:0;right:0;background:rgba(7,17,31,.96);border-top:1px solid var(--line);z-index:20;padding:7px 6px calc(7px + env(safe-area-inset-bottom))}.mobile-nav button{border:0;background:none;color:var(--muted);padding:7px 2px;font-size:10px}.mobile-nav button b{display:block;font-size:20px;margin-bottom:2px}.mobile-nav button.active{color:#fff}}
+    @media(max-width:980px){.app{grid-template-columns:1fr}.sidebar{display:none}.main{padding:15px;padding-bottom:88px}.grid4{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}.topbar{align-items:flex-start}.mobile-nav{display:grid;grid-template-columns:repeat(6,1fr);position:fixed;bottom:0;left:0;right:0;background:rgba(7,17,31,.96);border-top:1px solid var(--line);z-index:20;padding:7px 6px calc(7px + env(safe-area-inset-bottom))}.mobile-nav button{border:0;background:none;color:var(--muted);padding:7px 2px;font-size:10px}.mobile-nav button b{display:block;font-size:20px;margin-bottom:2px}.mobile-nav button.active{color:#fff}}
     @media(max-width:620px){.grid4{grid-template-columns:1fr 1fr}.metric .value{font-size:29px}.topbar{display:block}.top-actions{justify-content:flex-start;margin-top:13px}.main{padding:12px;padding-bottom:92px}.card{padding:15px}.drop{padding:22px 12px}.log{grid-template-columns:110px 90px 1fr}.log>div:last-child{display:none}}
   </style>
 </head>
@@ -63,6 +71,7 @@
         <button data-tab="import" onclick="openTab('import')"><span>⇧</span>Importar Excel</button>
         <button data-tab="tickets" onclick="openTab('tickets')"><span>🎫</span>Entradas</button>
         <button data-tab="monitor" onclick="openTab('monitor')"><span>●</span>Monitor del acto</button>
+        <button data-tab="audit" onclick="openTab('audit')"><span>✓</span>Auditoría completa</button>
         <button data-tab="settings" onclick="openTab('settings')"><span>⚙</span>Herramientas</button>
       </nav>
       <div class="side-footer"><div class="session"><strong id="sessionDevice">Administración</strong><br><span id="syncText">Conectando…</span></div></div>
@@ -118,6 +127,86 @@
         <div class="card mt"><div class="card-title"><h2>Actividad en directo</h2><span id="monitorTime" class="badge">—</span></div><div id="logsList"></div></div>
       </section>
 
+      <section id="tab-audit" class="tab hidden">
+        <div class="grid grid2">
+          <div class="card">
+            <div class="card-title">
+              <h2>Auditoría completa de entradas</h2>
+              <span id="auditBadge" class="badge">Sin iniciar</span>
+            </div>
+            <p class="muted small">
+              Comprueba la hoja, códigos y asientos duplicados, existencia de cada PDF,
+              archivo y carpeta, QR real impreso dentro del PDF y correspondencia de
+              nombre, zona, fila y butaca.
+            </p>
+            <div class="alert warn mt">
+              Mantén esta pestaña abierta, el ordenador conectado y evita que entre
+              en reposo. Para 500 entradas puede tardar entre 20 y 45 minutos.
+            </div>
+            <div class="btn-row mt">
+              <button id="auditStartBtn" class="btn green" onclick="startCompleteAudit()">Auditar todas las entradas</button>
+              <button id="auditStopBtn" class="btn red" onclick="stopCompleteAudit()" disabled>Detener</button>
+              <button class="btn secondary" onclick="openAuditSheet()">Abrir informe</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <h2>Progreso</h2>
+              <span id="auditTime" class="badge">—</span>
+            </div>
+            <div class="progress"><div id="auditProgressBar"></div></div>
+            <div id="auditProgressText" class="progress-label">
+              <span>0 de 0</span><span>0%</span>
+            </div>
+            <div class="audit-stats mt">
+              <div class="card metric"><div class="label">Correctas</div><div id="auditOk" class="value">0</div></div>
+              <div class="card metric"><div class="label">Con error</div><div id="auditErrors" class="value">0</div></div>
+              <div class="card metric"><div class="label">QR ilegibles</div><div id="auditUnreadable" class="value">0</div></div>
+              <div class="card metric"><div class="label">Asientos repetidos</div><div id="auditDuplicateSeats" class="value">0</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt">
+          <div class="card-title">
+            <h2>Resultado</h2>
+            <span id="auditResultBadge" class="badge">—</span>
+          </div>
+          <div id="auditSummary" class="alert info">
+            Pulsa “Auditar todas las entradas” para comenzar.
+          </div>
+          <div id="auditConsole" class="audit-console mt">
+            <div>Esperando auditoría…</div>
+          </div>
+        </div>
+
+        <div class="card mt">
+          <div class="card-title">
+            <h2>Incidencias detectadas</h2>
+            <span id="auditIssueCount" class="badge">0</span>
+          </div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Nombre</th>
+                  <th>Zona</th>
+                  <th>Fila</th>
+                  <th>Butaca</th>
+                  <th>Resultado</th>
+                  <th>Observaciones</th>
+                </tr>
+              </thead>
+              <tbody id="auditIssuesBody">
+                <tr><td colspan="7" class="muted">Todavía no hay resultados.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <section id="tab-settings" class="tab hidden">
         <div class="grid grid2">
           <div class="card"><div class="card-title"><h2>Acciones del sistema</h2></div><div class="btn-row"><button class="btn secondary" onclick="runPreflight()">Comprobar integridad</button><button class="btn secondary" onclick="createBackup()">Crear copia de seguridad</button><button class="btn secondary" onclick="openExternal('folder')">Abrir carpeta de PDFs</button><button class="btn secondary" onclick="refreshAll(true)">Recargar datos</button></div></div>
@@ -127,7 +216,7 @@
       </section>
     </main>
 
-    <nav class="mobile-nav"><button data-tab="overview" class="active" onclick="openTab('overview')"><b>⌂</b>Resumen</button><button data-tab="import" onclick="openTab('import')"><b>⇧</b>Importar</button><button data-tab="tickets" onclick="openTab('tickets')"><b>🎫</b>Entradas</button><button data-tab="monitor" onclick="openTab('monitor')"><b>●</b>Monitor</button><button data-tab="settings" onclick="openTab('settings')"><b>⚙</b>Ajustes</button></nav>
+    <nav class="mobile-nav"><button data-tab="overview" class="active" onclick="openTab('overview')"><b>⌂</b>Resumen</button><button data-tab="import" onclick="openTab('import')"><b>⇧</b>Importar</button><button data-tab="tickets" onclick="openTab('tickets')"><b>🎫</b>Entradas</button><button data-tab="monitor" onclick="openTab('monitor')"><b>●</b>Monitor</button><button data-tab="audit" onclick="openTab('audit')"><b>✓</b>Auditar</button><button data-tab="settings" onclick="openTab('settings')"><b>⚙</b>Ajustes</button></nav>
   </div>
   <div id="toast" class="toast hidden"></div>
 
@@ -138,6 +227,13 @@ let adminPin=sessionStorage.getItem('admin_pin')||''
 let deviceName=localStorage.getItem('admin_device')||'Administración'
 let state={tickets:[],stats:null,pdfs:null,preflight:null,logs:[],incidents:[],event:{},spreadsheetUrl:'',outputFolderUrl:''}
 let importedRows=[]
+let auditRunning=false
+let auditStopRequested=false
+let auditSession=''
+let auditSheetUrl=''
+let auditStartedAt=0
+let auditResults=[]
+let auditWakeLock=null
 let currentTab='overview'
 let monitorTimer=null
 
@@ -152,7 +248,7 @@ function logout(){localStorage.removeItem('admin_token');sessionStorage.removeIt
 async function refreshAll(notify){setSync('Actualizando…');const r=await jsonp('adminsnapshot',{token},60000);if(r.status==='UNAUTHORIZED'){logout();return}if(r.status!=='OK')throw new Error(r.message||'No se han podido cargar los datos.');state={...state,...r};renderAll();setSync('Actualizado '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));if(notify)toast('Datos actualizados','ok')}
 function renderAll(){renderOverview();renderTickets();renderMonitor();renderEvent()}
 
-function openTab(tab){currentTab=tab;document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));document.getElementById('tab-'+tab).classList.remove('hidden');document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));const labels={overview:['Resumen','Situación general del sistema'],import:['Importar Excel','Carga automática de entradas'],tickets:['Entradas','Listado y búsqueda'],monitor:['Monitor del acto','Actividad y fallos en tiempo real'],settings:['Herramientas','Mantenimiento y seguridad']};document.getElementById('pageTitle').textContent=labels[tab][0];document.getElementById('pageSubtitle').textContent=labels[tab][1];if(tab==='monitor'){refreshAll(false);clearInterval(monitorTimer);monitorTimer=setInterval(()=>refreshAll(false).catch(()=>{}),8000)}else{clearInterval(monitorTimer);monitorTimer=null}}
+function openTab(tab){currentTab=tab;document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));document.getElementById('tab-'+tab).classList.remove('hidden');document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));const labels={overview:['Resumen','Situación general del sistema'],import:['Importar Excel','Carga automática de entradas'],tickets:['Entradas','Listado y búsqueda'],monitor:['Monitor del acto','Actividad y fallos en tiempo real'],audit:['Auditoría completa','Comprobación real de PDF, QR, datos y asientos'],settings:['Herramientas','Mantenimiento y seguridad']};document.getElementById('pageTitle').textContent=labels[tab][0];document.getElementById('pageSubtitle').textContent=labels[tab][1];if(tab==='monitor'){refreshAll(false);clearInterval(monitorTimer);monitorTimer=setInterval(()=>refreshAll(false).catch(()=>{}),8000)}else{clearInterval(monitorTimer);monitorTimer=null}}
 
 function renderOverview(){const s=state.stats||emptyStats();const total=n(s.total),used=n(s.used),pending=n(s.pending),pct=total?Math.round(used/total*100):0;txt('mTotal',total);txt('mUsed',used);txt('mPending',pending);txt('mDevices',n(s.activeDevices));txt('mTotalSub',`${n(s.salon?.total)} salón · ${n(s.palco?.total)} palco`);txt('mUsedSub',`${pct}% del aforo registrado`);txt('mPendingSub',`${Math.max(total-used,0)} por acceder`);txt('accessPercent',pct+'%');document.getElementById('accessRing').style.setProperty('--p',pct);width('accessBar',pct);txt('salonProgress',`Salón: ${n(s.salon?.used)}/${n(s.salon?.total)}`);txt('palcoProgress',`Palco: ${n(s.palco?.used)}/${n(s.palco?.total)}`);txt('lastSync','Última actualización: '+new Date().toLocaleTimeString('es-ES'));setBadge('accessBadge',used+' dentro',pct>=90?'ok':'');const p=state.preflight||{};setBadge('systemBadge',p.issueCount?`${p.issueCount} avisos`:'Correcto',p.issueCount?'warn':'ok');document.getElementById('systemSummary').className='alert '+(p.issueCount?'warn':'ok');document.getElementById('systemSummary').textContent=p.issueCount?`Hay ${p.issueCount} incidencias de integridad. Pulsa “Comprobar ahora” para verlas.`:`${n(p.total)} entradas comprobadas: ${n(p.salon)} en salón y ${n(p.palco)} en palco.`;const pdf=state.pdfs||{};const pdfPct=n(pdf.total)?Math.round(n(pdf.generated)/n(pdf.total)*100):0;width('pdfBar',pdfPct);txt('pdfGenerated','Generados: '+n(pdf.generated));txt('pdfPending','Pendientes: '+n(pdf.pending));setBadge('pdfBadge',pdfPct+'%',pdf.pending?'warn':'ok');const incidents=state.incidents||[];setBadge('incidentBadge',incidents.length+' recientes',incidents.length?'warn':'ok');document.getElementById('overviewIncidents').innerHTML=incidents.length?incidents.slice(0,5).map(logMini).join(''):'No hay incidencias recientes.'}
 
@@ -318,6 +414,567 @@ async function importExcel(){
   }
 }
 function setImportProgress(done,total){const pct=Math.round(done/total*100);width('importProgress',pct);document.getElementById('importProgressText').innerHTML=`<span>${done} de ${total} filas</span><span>${pct}%</span>`}
+
+
+async function startCompleteAudit(){
+  if(auditRunning){
+    toast('Ya hay una auditoría en curso.','bad')
+    return
+  }
+
+  if(
+    !confirm(
+      'Se comprobarán todas las entradas, sus PDF y el QR real de cada archivo. ' +
+      'La pestaña debe permanecer abierta. ¿Comenzar?'
+    )
+  )return
+
+  auditRunning=true
+  auditStopRequested=false
+  auditResults=[]
+  auditStartedAt=Date.now()
+
+  document.getElementById('auditStartBtn').disabled=true
+  document.getElementById('auditStopBtn').disabled=false
+  document.getElementById('auditIssuesBody').innerHTML=
+    '<tr><td colspan="7" class="muted">Auditoría en curso…</td></tr>'
+
+  setBadge('auditBadge','Preparando','warn')
+  setBadge('auditResultBadge','En curso','warn')
+  txt('auditOk','0')
+  txt('auditErrors','0')
+  txt('auditUnreadable','0')
+  txt('auditDuplicateSeats','0')
+  width('auditProgressBar',0)
+  document.getElementById('auditConsole').innerHTML=''
+  auditLog('Preparando la auditoría…')
+
+  try{
+    await acquireAuditWakeLock()
+
+    if(window.pdfjsLib){
+      pdfjsLib.GlobalWorkerOptions.workerSrc=
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+    }
+
+    const start=await jsonp(
+      'adminauditstart',
+      {token,adminPin},
+      180000
+    )
+
+    if(start.status!=='OK'){
+      throw new Error(start.message||'No se ha podido iniciar la auditoría.')
+    }
+
+    auditSession=start.auditSession
+    auditSheetUrl=start.sheetUrl||''
+    const total=n(start.total)
+
+    txt('auditDuplicateSeats',n(start.duplicateSeats))
+    auditLog(
+      `Se han encontrado ${total} entradas. ` +
+      `Códigos repetidos: ${n(start.duplicateCodes)}. ` +
+      `Asientos repetidos: ${n(start.duplicateSeats)}.`
+    )
+
+    const resultBuffer=[]
+    let okCount=0
+    let errorCount=0
+    let unreadableCount=0
+
+    for(let index=0;index<total;index++){
+      if(auditStopRequested){
+        auditLog('Auditoría detenida por el usuario.')
+        break
+      }
+
+      const payload=await jsonp(
+        'adminauditpdf',
+        {
+          token,
+          adminPin,
+          auditSession,
+          index
+        },
+        180000
+      )
+
+      let result
+
+      if(payload.status==='OK'){
+        result=await auditSinglePdf(payload)
+      }else{
+        const expected=payload.expected||{}
+        result={
+          index,
+          code:expected.code||'',
+          name:expected.name||'',
+          zone:expected.zone||'',
+          fila:expected.fila||'',
+          butaca:expected.butaca||'',
+          qrLegible:false,
+          qrRead:'',
+          qrMatches:false,
+          nameInPdf:false,
+          seatInPdf:false,
+          zoneInPdf:false,
+          result:'ERROR',
+          observations:payload.message||'No se ha podido abrir el PDF.'
+        }
+      }
+
+      auditResults.push(result)
+      resultBuffer.push({
+        index:result.index,
+        qrLegible:result.qrLegible,
+        qrRead:result.qrRead,
+        qrMatches:result.qrMatches,
+        nameInPdf:result.nameInPdf,
+        seatInPdf:result.seatInPdf,
+        zoneInPdf:result.zoneInPdf,
+        observations:result.observations
+      })
+
+      if(result.result==='OK')okCount++
+      else errorCount++
+
+      if(!result.qrLegible)unreadableCount++
+
+      txt('auditOk',okCount)
+      txt('auditErrors',errorCount)
+      txt('auditUnreadable',unreadableCount)
+
+      const done=index+1
+      const pct=total?Math.round(done/total*100):0
+      width('auditProgressBar',pct)
+      document.getElementById('auditProgressText').innerHTML=
+        `<span>${done} de ${total}</span><span>${pct}%</span>`
+
+      txt(
+        'auditTime',
+        formatAuditDuration(Date.now()-auditStartedAt)
+      )
+
+      if(result.result==='ERROR'){
+        auditLog(
+          `ERROR · ${result.code||'sin código'} · ${result.observations}`
+        )
+      }else if(done%10===0||done===total){
+        auditLog(`Comprobadas ${done} de ${total} entradas.`)
+      }
+
+      if(resultBuffer.length>=2||done===total){
+        const save=await jsonp(
+          'adminauditresults',
+          {
+            token,
+            adminPin,
+            auditSession,
+            rows:JSON.stringify(resultBuffer.splice(0))
+          },
+          120000
+        )
+
+        if(save.status!=='OK'){
+          throw new Error(
+            save.message||
+            'No se han podido guardar los resultados de auditoría.'
+          )
+        }
+      }
+
+      // Libera memoria entre PDF.
+      await new Promise(resolve=>setTimeout(resolve,20))
+    }
+
+    if(auditStopRequested){
+      setBadge('auditBadge','Detenida','warn')
+      setBadge('auditResultBadge','Incompleta','warn')
+      document.getElementById('auditSummary').className='alert warn'
+      document.getElementById('auditSummary').textContent=
+        'La auditoría se ha detenido. Los resultados procesados quedan guardados.'
+      renderAuditIssues()
+      return
+    }
+
+    const finish=await jsonp(
+      'adminauditfinish',
+      {token,adminPin,auditSession},
+      180000
+    )
+
+    if(finish.status!=='OK'){
+      throw new Error(finish.message||'No se ha podido finalizar la auditoría.')
+    }
+
+    auditSheetUrl=finish.sheetUrl||auditSheetUrl
+    renderAuditFinish(finish.summary)
+    renderAuditIssues()
+    auditLog('Auditoría terminada y guardada en AUDITORIA_ENTRADAS.')
+
+  }catch(error){
+    console.error(error)
+    setBadge('auditBadge','Error','bad')
+    setBadge('auditResultBadge','Error','bad')
+    document.getElementById('auditSummary').className='alert bad'
+    document.getElementById('auditSummary').textContent=
+      error.message||String(error)
+    auditLog('ERROR GENERAL · '+(error.message||error))
+    toast(error.message||String(error),'bad')
+    renderAuditIssues()
+
+  }finally{
+    auditRunning=false
+    document.getElementById('auditStartBtn').disabled=false
+    document.getElementById('auditStopBtn').disabled=true
+    await releaseAuditWakeLock()
+  }
+}
+
+
+function stopCompleteAudit(){
+  if(!auditRunning)return
+
+  auditStopRequested=true
+  document.getElementById('auditStopBtn').disabled=true
+  auditLog('Solicitud de detención recibida. Se terminará el PDF actual.')
+}
+
+
+async function auditSinglePdf(payload){
+  const expected=payload.expected||{}
+  const file=payload.file||{}
+  const server=payload.serverChecks||{}
+  const issues=[]
+
+  let qrRead=''
+  let qrLegible=false
+  let extractedText=''
+
+  try{
+    const bytes=base64ToUint8Array(file.base64||'')
+    const pdf=await pdfjsLib.getDocument({data:bytes}).promise
+    const pagesToCheck=Math.min(pdf.numPages,2)
+
+    for(let pageNumber=1;pageNumber<=pagesToCheck;pageNumber++){
+      const page=await pdf.getPage(pageNumber)
+      const textContent=await page.getTextContent()
+      extractedText+=' '+textContent.items.map(item=>item.str||'').join(' ')
+
+      if(!qrLegible){
+        qrRead=await readQrFromPdfPage(page)
+        qrLegible=Boolean(qrRead)
+      }
+
+      try{page.cleanup()}catch(e){}
+    }
+
+    try{await pdf.destroy()}catch(e){}
+
+  }catch(error){
+    issues.push('No se ha podido procesar el PDF: '+(error.message||error))
+  }
+
+  const normalizedPdfText=normalizeAuditClientText(extractedText)
+  const normalizedName=normalizeAuditClientText(expected.name||'')
+  const nameInPdf=Boolean(
+    normalizedName&&normalizedPdfText.includes(normalizedName)
+  )
+
+  const seatInPdf=checkAuditSeatInText(
+    normalizedPdfText,
+    expected.fila,
+    expected.butaca
+  )
+
+  const zoneInPdf=checkAuditZoneInText(
+    normalizedPdfText,
+    expected.zone
+  )
+
+  const qrMatches=Boolean(
+    qrLegible&&
+    String(qrRead).trim()===String(expected.code||'').trim()
+  )
+
+  if(!server.pdfExists)issues.push('PDF no encontrado')
+  if(server.pdfExists&&!server.pdfMimeOk)issues.push('El archivo no es PDF')
+  if(n(server.pdfBytes)<=1000)issues.push('PDF vacío o demasiado pequeño')
+  if(!server.fileNameOk)issues.push('El nombre del PDF no contiene el código')
+  if(!server.folderOk)issues.push('El PDF no está en la carpeta correcta')
+  if(!expected.codeUnique)issues.push('Código repetido')
+  if(!expected.seatUnique)issues.push('Asiento repetido')
+  if(!expected.dataComplete)issues.push('Datos obligatorios incompletos')
+  if(!expected.qrUrlCorrect)issues.push('URL del QR incorrecta')
+  if(!qrLegible)issues.push('QR no legible dentro del PDF')
+  if(qrLegible&&!qrMatches)issues.push(`QR incorrecto: ${qrRead}`)
+  if(!nameInPdf)issues.push('Nombre no localizado en el PDF')
+  if(!seatInPdf)issues.push('Fila o butaca no coinciden en el PDF')
+  if(!zoneInPdf)issues.push('Zona no coincide en el PDF')
+
+  const allOk=Boolean(
+    server.pdfExists&&
+    server.pdfMimeOk&&
+    n(server.pdfBytes)>1000&&
+    server.fileNameOk&&
+    server.folderOk&&
+    expected.codeUnique&&
+    expected.seatUnique&&
+    expected.dataComplete&&
+    expected.qrUrlCorrect&&
+    qrLegible&&
+    qrMatches&&
+    nameInPdf&&
+    seatInPdf&&
+    zoneInPdf
+  )
+
+  return{
+    index:n(expected.index)-1,
+    code:expected.code||'',
+    name:expected.name||'',
+    zone:expected.zone||'',
+    fila:expected.fila||'',
+    butaca:expected.butaca||'',
+    qrLegible,
+    qrRead,
+    qrMatches,
+    nameInPdf,
+    seatInPdf,
+    zoneInPdf,
+    result:allOk?'OK':'ERROR',
+    observations:[...new Set(issues.filter(Boolean))].join(' · ')
+  }
+}
+
+
+async function readQrFromPdfPage(page){
+  const scales=[2.6,3.5]
+
+  for(const scale of scales){
+    const viewport=page.getViewport({scale})
+    const canvas=document.createElement('canvas')
+    const context=canvas.getContext('2d',{
+      willReadFrequently:true
+    })
+
+    canvas.width=Math.ceil(viewport.width)
+    canvas.height=Math.ceil(viewport.height)
+
+    await page.render({
+      canvasContext:context,
+      viewport
+    }).promise
+
+    const image=context.getImageData(
+      0,0,canvas.width,canvas.height
+    )
+
+    const result=jsQR(
+      image.data,
+      image.width,
+      image.height,
+      {inversionAttempts:'attemptBoth'}
+    )
+
+    canvas.width=1
+    canvas.height=1
+
+    if(result&&result.data){
+      return String(result.data).trim()
+    }
+  }
+
+  return''
+}
+
+
+function checkAuditSeatInText(text,fila,butaca){
+  const f=normalizeAuditClientText(fila)
+  const b=normalizeAuditClientText(butaca)
+
+  if(!f||!b)return false
+
+  const filaPatterns=[
+    new RegExp(`FILA\\s*[:\\-]?\\s*${escapeAuditRegex(f)}(?:\\D|$)`),
+    new RegExp(`F\\s*[:\\-]?\\s*${escapeAuditRegex(f)}(?:\\D|$)`)
+  ]
+
+  const butacaPatterns=[
+    new RegExp(`BUTACA\\s*[:\\-]?\\s*${escapeAuditRegex(b)}(?:\\D|$)`),
+    new RegExp(`ASIENTO\\s*[:\\-]?\\s*${escapeAuditRegex(b)}(?:\\D|$)`),
+    new RegExp(`B\\s*[:\\-]?\\s*${escapeAuditRegex(b)}(?:\\D|$)`)
+  ]
+
+  const filaOk=filaPatterns.some(pattern=>pattern.test(text))
+  const butacaOk=butacaPatterns.some(pattern=>pattern.test(text))
+
+  return filaOk&&butacaOk
+}
+
+
+function checkAuditZoneInText(text,zone){
+  const z=normalizeAuditClientText(zone)
+
+  if(z==='PALCO'){
+    return text.includes('PALCO')
+  }
+
+  if(z==='PATIO'||z==='SALON'){
+    return text.includes('PATIO')||text.includes('SALON')
+  }
+
+  return false
+}
+
+
+function normalizeAuditClientText(value){
+  return String(value||'')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toUpperCase()
+    .replace(/\s+/g,' ')
+    .trim()
+}
+
+
+function escapeAuditRegex(value){
+  return String(value||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&')
+}
+
+
+function base64ToUint8Array(base64){
+  const binary=atob(base64)
+  const bytes=new Uint8Array(binary.length)
+
+  for(let i=0;i<binary.length;i++){
+    bytes[i]=binary.charCodeAt(i)
+  }
+
+  return bytes
+}
+
+
+function renderAuditFinish(summary){
+  const s=summary||{}
+  const allOk=n(s.error)===0&&n(s.pending)===0
+
+  setBadge(
+    'auditBadge',
+    allOk?'Completada sin errores':'Completada con incidencias',
+    allOk?'ok':'warn'
+  )
+
+  setBadge(
+    'auditResultBadge',
+    `${n(s.ok)} correctas · ${n(s.error)} errores`,
+    allOk?'ok':'warn'
+  )
+
+  document.getElementById('auditSummary').className=
+    'alert '+(allOk?'ok':'warn')
+
+  document.getElementById('auditSummary').innerHTML=
+    `<strong>${n(s.total)} entradas analizadas</strong><br>`+
+    `${n(s.ok)} correctas · ${n(s.error)} con error · ${n(s.pending)} pendientes<br>`+
+    `Códigos repetidos: ${n(s.duplicateCodes)} · `+
+    `Asientos repetidos: ${n(s.duplicateSeats)} · `+
+    `PDF no encontrados: ${n(s.missingPdfs)} · `+
+    `QR ilegibles: ${n(s.unreadableQr)} · `+
+    `QR incorrectos: ${n(s.mismatchedQr)}`
+
+  txt('auditOk',n(s.ok))
+  txt('auditErrors',n(s.error))
+  txt('auditUnreadable',n(s.unreadableQr))
+  txt('auditDuplicateSeats',n(s.duplicateSeats))
+  width('auditProgressBar',100)
+  document.getElementById('auditProgressText').innerHTML=
+    `<span>${n(s.total)} de ${n(s.total)}</span><span>100%</span>`
+}
+
+
+function renderAuditIssues(){
+  const issues=auditResults.filter(item=>item.result!=='OK')
+  txt('auditIssueCount',issues.length)
+
+  document.getElementById('auditIssuesBody').innerHTML=
+    issues.length
+      ?issues.map(item=>`
+        <tr class="audit-error-row">
+          <td><code>${esc(item.code)}</code></td>
+          <td>${esc(item.name)}</td>
+          <td>${esc(item.zone)}</td>
+          <td>${esc(item.fila)}</td>
+          <td>${esc(item.butaca)}</td>
+          <td><span class="badge bad">ERROR</span></td>
+          <td>${esc(item.observations)}</td>
+        </tr>
+      `).join('')
+      :'<tr class="audit-ok-row"><td colspan="7">No se han detectado incidencias.</td></tr>'
+}
+
+
+function auditLog(message){
+  const consoleBox=document.getElementById('auditConsole')
+  const line=document.createElement('div')
+  line.textContent=
+    new Date().toLocaleTimeString('es-ES')+' · '+message
+  consoleBox.appendChild(line)
+  consoleBox.scrollTop=consoleBox.scrollHeight
+}
+
+
+function formatAuditDuration(milliseconds){
+  const total=Math.max(Math.floor(milliseconds/1000),0)
+  const minutes=Math.floor(total/60)
+  const seconds=total%60
+  return `${minutes}:${String(seconds).padStart(2,'0')}`
+}
+
+
+async function acquireAuditWakeLock(){
+  if(!('wakeLock'in navigator))return
+
+  try{
+    auditWakeLock=await navigator.wakeLock.request('screen')
+  }catch(error){
+    auditLog('No se ha podido impedir el reposo automático.')
+  }
+}
+
+
+async function releaseAuditWakeLock(){
+  if(!auditWakeLock)return
+
+  try{
+    await auditWakeLock.release()
+  }catch(error){}
+
+  auditWakeLock=null
+}
+
+
+function openAuditSheet(){
+  if(auditSheetUrl){
+    window.open(auditSheetUrl,'_blank','noopener')
+    return
+  }
+
+  openExternal('sheet')
+}
+
+
+document.addEventListener('visibilitychange',async()=>{
+  if(
+    document.visibilityState==='visible'&&
+    auditRunning&&
+    !auditWakeLock
+  ){
+    await acquireAuditWakeLock()
+  }
+})
+
 
 async function generateCodes(){if(!confirm('Se generarán códigos para todas las filas que todavía no tengan uno. ¿Continuar?'))return;busy('Generando códigos…');try{const r=await jsonp('admingeneratecodes',{token,adminPin},180000);if(r.status!=='OK')throw new Error(r.message);toast(`${r.generated} códigos generados.`,'ok');await refreshAll(false)}catch(e){toast(e.message,'bad')}finally{unbusy()}}
 async function generatePdfBatch(){
