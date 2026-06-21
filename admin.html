@@ -319,10 +319,27 @@ function setImportProgress(done,total){const pct=Math.round(done/total*100);widt
 
 async function generateCodes(){if(!confirm('Se generarán códigos para todas las filas que todavía no tengan uno. ¿Continuar?'))return;busy('Generando códigos…');try{const r=await jsonp('admingeneratecodes',{token,adminPin},180000);if(r.status!=='OK')throw new Error(r.message);toast(`${r.generated} códigos generados.`,'ok');await refreshAll(false)}catch(e){toast(e.message,'bad')}finally{unbusy()}}
 async function generatePdfBatch(){if(!confirm('Se generará el siguiente lote de PDFs. Esta operación puede tardar varios minutos.'))return;busy('Generando lote de PDFs…');try{const r=await jsonp('admingeneratepdfs',{token,adminPin},360000);if(r.status!=='OK')throw new Error(r.message);toast(`Lote terminado. Quedan ${n(r.pdfs?.pending)} PDFs pendientes.`,'ok');await refreshAll(false)}catch(e){toast(e.message,'bad')}finally{unbusy()}}
-async function runPreflight(){busy('Comprobando sistema…');try{const r=await jsonp('preflight',{token},90000);if(r.status==='UNAUTHORIZED')return logout();state.preflight=r;renderOverview();if(r.issueCount){alert(`Se han encontrado ${r.issueCount} avisos:
-
-${(r.issues||[]).slice(0,25).join('
-')}`)}else toast('La comprobación no ha encontrado incidencias.','ok')}catch(e){toast(e.message,'bad')}finally{unbusy()}}
+async function runPreflight(){
+  busy('Comprobando sistema…')
+  try{
+    const r=await jsonp('preflight',{token},90000)
+    if(r.status==='UNAUTHORIZED')return logout()
+    state.preflight=r
+    renderOverview()
+    if(r.issueCount){
+      alert(
+        `Se han encontrado ${r.issueCount} avisos:\n\n` +
+        `${(r.issues||[]).slice(0,25).join('\n')}`
+      )
+    }else{
+      toast('La comprobación no ha encontrado incidencias.','ok')
+    }
+  }catch(e){
+    toast(e.message,'bad')
+  }finally{
+    unbusy()
+  }
+}
 async function createBackup(){const pin=await ensurePin();if(!pin)return;busy('Creando copia…');try{const r=await jsonp('backup',{token,adminPin:pin},90000);if(r.status!=='OK')throw new Error(r.message);toast('Copia de seguridad creada.','ok')}catch(e){toast(e.message,'bad')}finally{unbusy()}}
 async function resetCheckins(){if(!confirm('Se borrarán todos los estados de acceso, fechas y dispositivos. ¿Seguro?'))return;const pin=await ensurePin(true);if(!pin)return;busy('Reiniciando accesos…');try{const r=await jsonp('adminresetcheckins',{token,adminPin:pin},120000);if(r.status!=='OK')throw new Error(r.message);toast(r.message,'ok');await refreshAll(false)}catch(e){toast(e.message,'bad')}finally{unbusy()}}
 async function clearTickets(){if(!confirm('ATENCIÓN: se vaciarán todas las filas de la hoja tickets. Haz una copia antes. ¿Continuar?'))return;const phrase=prompt('Escribe VACIAR para confirmar.');if(phrase!=='VACIAR')return;const pin=await ensurePin(true);if(!pin)return;busy('Vaciando hoja…');try{const r=await jsonp('admincleartickets',{token,adminPin:pin},120000);if(r.status!=='OK')throw new Error(r.message);toast(r.message,'ok');await refreshAll(false)}catch(e){toast(e.message,'bad')}finally{unbusy()}}
