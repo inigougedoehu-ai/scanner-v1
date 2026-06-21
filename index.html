@@ -716,7 +716,7 @@
       <section id="searchTab" class="tab-view hidden">
         <div class="card">
           <div class="title">Buscar entrada</div>
-          <div class="subtitle">Busca por estudiante, código, zona, fila o butaca.</div>
+          <div class="subtitle">Busca por nombre, código, zona, fila o butaca.</div>
           <input id="searchInput" class="mt" type="search" placeholder="Escribe para buscar..." oninput="renderSearchResults()">
           <div id="searchResults" class="mt"></div>
         </div>
@@ -1691,7 +1691,7 @@
       document.getElementById('resultBox').innerHTML = `
         <div class="result-icon">${icon}</div>
         <div class="result-title">${escapeHtml(title)}</div>
-        ${res.estudiante ? `<div class="result-name">${escapeHtml(res.estudiante)}</div>` : ''}
+        ${(res.nombre || res.estudiante) ? `<div class="result-name">${escapeHtml(res.nombre || res.estudiante)}</div>` : ''}
         ${res.zona ? `<div><span class="zone-badge ${zoneClass}">${escapeHtml(res.zona)}</span></div>` : ''}
         ${hasSeat ? `
           <div class="seat-grid">
@@ -1979,7 +1979,7 @@
         .filter(ticket => {
           const haystack = normalizeSearch([
             ticket.code,
-            ticket.estudiante,
+            ticket.nombre || ticket.estudiante,
             ticket.nombre,
             ticket.zona,
             'fila ' + ticket.fila,
@@ -1998,7 +1998,7 @@
 
       container.innerHTML = results.map(ticket => `
         <div class="search-result">
-          <div class="search-name">${escapeHtml(ticket.estudiante || 'Sin estudiante')}</div>
+          <div class="search-name">${escapeHtml(ticket.nombre || ticket.estudiante || 'Sin nombre')}</div>
           <div class="search-meta">${escapeHtml(ticket.zona)} · Fila ${escapeHtml(ticket.fila)} · Butaca ${escapeHtml(ticket.butaca)}<br>${escapeHtml(ticket.code)}<br>${ticket.used ? '⚠️ Utilizada' : '✅ Disponible'}</div>
           <div class="search-actions">
             <button type="button" class="btn small ${ticket.used ? 'secondary' : ''}" onclick="manualCheckIn('${escapeJs(ticket.code)}')">${ticket.used ? 'Ver estado' : 'Registrar acceso'}</button>
@@ -2058,7 +2058,7 @@
         return
       }
       undoTargetCode = code
-      document.getElementById('undoDescription').textContent = `${ticket.estudiante} · ${ticket.zona} · Fila ${ticket.fila} · Butaca ${ticket.butaca}`
+      document.getElementById('undoDescription').textContent = `${ticket.nombre || ticket.estudiante} · ${ticket.zona} · Fila ${ticket.fila} · Butaca ${ticket.butaca}`
       document.getElementById('undoPin').value = ''
       document.getElementById('undoReason').value = ''
       document.getElementById('undoModal').classList.remove('hidden')
