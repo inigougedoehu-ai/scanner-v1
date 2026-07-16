@@ -3,25 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#020617">
+  <meta name="theme-color" content="#1d2232">
   <title>Control de entradas</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
 
   <style>
     :root {
-      --bg: #020617;
-      --card: #0f172a;
-      --card2: #111c31;
-      --text: #f8fafc;
-      --muted: #aebbd0;
-      --border: rgba(255,255,255,.12);
-      --blue: #2563eb;
-      --blue2: #60a5fa;
-      --ok: #16a34a;
-      --warn: #d97706;
-      --bad: #dc2626;
-      --palco: #7c2d3e;
-      --salon: #163c67;
+      --navy: #1f2434;
+      --navy2: #252b3d;
+      --turq: #32d2c3;
+      --turq-dark: #24b9aa;
+      --green: #2fc92f;
+      --green-soft: #cdf5cd;
+      --red: #f03333;
+      --red-soft: #ffe8e8;
+      --amber: #d97706;
+      --white: #ffffff;
+      --page: #f5f5f6;
+      --panel: #ffffff;
+      --soft: #eeeeef;
+      --line: #cfd3dd;
+      --line2: #e2e5eb;
+      --text: #1e2433;
+      --muted: #8d96a6;
+      --dark-muted: rgba(255,255,255,.72);
+      --shadow: 0 12px 34px rgba(15, 23, 42, .12);
     }
 
     * {
@@ -32,16 +38,13 @@
     html, body {
       margin: 0;
       min-height: 100%;
-      background:
-        radial-gradient(circle at top left, rgba(37,99,235,.28), transparent 34%),
-        radial-gradient(circle at bottom right, rgba(22,163,74,.12), transparent 32%),
-        var(--bg);
+      background: var(--page);
       color: var(--text);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     body {
-      padding-bottom: calc(86px + env(safe-area-inset-bottom));
+      padding-bottom: calc(92px + env(safe-area-inset-bottom));
     }
 
     button, input, select, textarea {
@@ -52,96 +55,281 @@
       cursor: pointer;
     }
 
-    .app {
-      max-width: 620px;
-      margin: 0 auto;
-      padding: 14px;
-    }
-
     .hidden {
       display: none !important;
     }
 
+    .app {
+      max-width: 620px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: var(--page);
+    }
+
+    .login {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: var(--page);
+    }
+
+    .login-card {
+      width: min(460px, 100%);
+      border-radius: 28px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      padding: 26px;
+    }
+
+    .login-logo {
+      width: 58px;
+      height: 58px;
+      border-radius: 20px;
+      display: grid;
+      place-items: center;
+      color: var(--navy);
+      background: var(--turq);
+      font-size: 29px;
+      font-weight: 950;
+      margin-bottom: 18px;
+    }
+
+    .login-title {
+      font-size: 32px;
+      font-weight: 950;
+      letter-spacing: -.04em;
+      color: var(--text);
+    }
+
+    .login-subtitle {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.42;
+      margin-top: 6px;
+    }
+
+    .top-shell {
+      background: var(--navy);
+      color: white;
+      padding: calc(16px + env(safe-area-inset-top)) 16px 18px;
+      min-height: 118px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+
+    .event-title {
+      color: rgba(255,255,255,.82);
+      font-size: 16px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 330px;
+    }
+
+    .big-count {
+      margin-top: 3px;
+      font-size: 40px;
+      line-height: .95;
+      letter-spacing: -.06em;
+      color: var(--turq);
+      font-weight: 950;
+    }
+
+    .big-count span {
+      color: var(--turq);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 5px;
+    }
+
+    .icon-btn {
+      border: 0;
+      background: transparent;
+      color: white;
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      font-size: 29px;
+      line-height: 1;
+      border-radius: 12px;
+      position: relative;
+    }
+
+    .icon-btn.active {
+      color: var(--turq);
+    }
+
+    .sync-light {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: var(--green);
+      display: inline-block;
+      box-shadow: 0 0 0 3px rgba(47,201,47,.12);
+    }
+
+    .sync-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--dark-muted);
+      font-size: 0;
+    }
+
+    .sync-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: var(--green);
+    }
+
+    .sync-badge.syncing .sync-dot {
+      background: var(--amber);
+    }
+
+    .sync-badge.offline .sync-dot {
+      background: var(--red);
+    }
+
+    .sync-badge.online .sync-dot {
+      background: var(--green);
+    }
+
+    #syncText {
+      display: none;
+    }
+
+    .page {
+      min-height: calc(100vh - 118px - 92px);
+      background: var(--page);
+    }
+
+    .content {
+      padding: 18px 20px 24px;
+    }
+
     .card {
-      background: rgba(15,23,42,.97);
-      border: 1px solid var(--border);
-      border-radius: 24px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: none;
+    }
+
+    .soft-card {
+      background: var(--soft);
+      border: 0;
+      border-radius: 14px;
       padding: 18px;
-      box-shadow: 0 22px 60px rgba(0,0,0,.30);
-      margin-bottom: 14px;
+      text-align: center;
     }
 
     .title {
-      font-size: 29px;
-      line-height: 1.05;
+      font-size: 32px;
       font-weight: 950;
       letter-spacing: -.035em;
+      color: var(--text);
     }
 
     .subtitle {
       color: var(--muted);
-      font-size: 15px;
-      margin-top: 6px;
+      font-size: 16px;
+      line-height: 1.4;
+      margin-top: 4px;
+    }
+
+    .mt {
+      margin-top: 16px;
+    }
+
+    .small-text {
+      color: var(--muted);
+      font-size: 14px;
       line-height: 1.4;
     }
 
-    .mt { margin-top: 14px; }
-    .mb { margin-bottom: 14px; }
-
-    .input,
-    input,
-    select,
-    textarea {
+    input, select, textarea, .input {
       width: 100%;
-      min-height: 54px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.08);
-      color: white;
-      padding: 13px 14px;
+      min-height: 62px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      padding: 13px 15px;
       outline: none;
+      font-size: 18px;
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: #a6adba;
+    }
+
+    select {
+      appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, #111827 50%),
+        linear-gradient(135deg, #111827 50%, transparent 50%);
+      background-position:
+        calc(100% - 22px) calc(50% - 3px),
+        calc(100% - 16px) calc(50% - 3px);
+      background-size: 7px 7px, 7px 7px;
+      background-repeat: no-repeat;
     }
 
     textarea {
-      min-height: 90px;
+      min-height: 100px;
       resize: vertical;
-    }
-
-    input::placeholder,
-    textarea::placeholder {
-      color: #8795aa;
     }
 
     .btn {
       width: 100%;
-      min-height: 56px;
+      min-height: 64px;
       border: 0;
-      border-radius: 17px;
-      background: var(--blue);
+      border-radius: 9px;
+      background: var(--turq);
       color: white;
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 850;
       padding: 13px 16px;
     }
 
     .btn:disabled {
-      opacity: .5;
+      opacity: .42;
       cursor: default;
+      background: #e7e7e8;
+      color: #8d94a3;
     }
 
     .btn.secondary {
-      background: rgba(255,255,255,.10);
-      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--line);
     }
 
     .btn.danger {
-      background: var(--bad);
+      background: white;
+      color: var(--red);
+      border: 1.5px solid var(--red);
     }
 
     .btn.small {
-      min-height: 43px;
+      min-height: 48px;
       font-size: 15px;
-      border-radius: 14px;
+      border-radius: 10px;
     }
 
     .btn.inline {
@@ -156,6 +344,158 @@
       gap: 10px;
     }
 
+    .manual-wrap {
+      display: grid;
+      min-height: calc(100vh - 118px - 92px);
+      grid-template-rows: 1fr auto;
+      padding: 0 20px 22px;
+    }
+
+    .manual-center {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+      text-align: center;
+      min-height: 430px;
+    }
+
+    .manual-label {
+      font-size: 26px;
+      font-weight: 450;
+      color: #111;
+    }
+
+    .manual-input {
+      text-align: center;
+      font-size: 23px;
+      min-height: 60px;
+      border-radius: 9px;
+      border: 1px solid var(--line);
+      color: var(--text);
+    }
+
+    .manual-input::placeholder {
+      color: #c9ced8;
+    }
+
+    .scanner-wrap {
+      overflow: hidden;
+      background: #050505;
+      min-height: calc(100vh - 118px - 92px);
+      position: relative;
+      border: 0;
+      border-radius: 0;
+    }
+
+    #reader {
+      width: 100%;
+      min-height: calc(100vh - 118px - 92px);
+      background: #000;
+    }
+
+    #reader video {
+      object-fit: cover !important;
+      min-height: calc(100vh - 118px - 92px);
+      pointer-events: none !important;
+    }
+
+    .scanner-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      justify-items: center;
+      padding-top: 20px;
+      z-index: 2;
+    }
+
+    .scan-mode-pill {
+      background: rgba(31,36,52,.94);
+      color: white;
+      border-radius: 9px;
+      padding: 9px 16px;
+      font-size: 17px;
+      font-weight: 500;
+    }
+
+    .scan-frame {
+      width: 260px;
+      height: 260px;
+      align-self: center;
+      position: relative;
+      margin-top: 30px;
+    }
+
+    .scan-frame::before,
+    .scan-frame::after,
+    .scan-corners::before,
+    .scan-corners::after {
+      content: "";
+      position: absolute;
+      width: 78px;
+      height: 78px;
+      border-color: white;
+      border-style: solid;
+    }
+
+    .scan-frame::before {
+      left: 0;
+      top: 0;
+      border-width: 6px 0 0 6px;
+      border-radius: 18px 0 0 0;
+    }
+
+    .scan-frame::after {
+      right: 0;
+      top: 0;
+      border-width: 6px 6px 0 0;
+      border-radius: 0 18px 0 0;
+    }
+
+    .scan-corners::before {
+      left: 0;
+      bottom: 0;
+      border-width: 0 0 6px 6px;
+      border-radius: 0 0 0 18px;
+    }
+
+    .scan-corners::after {
+      right: 0;
+      bottom: 0;
+      border-width: 0 6px 6px 0;
+      border-radius: 0 0 18px 0;
+    }
+
+    .scanner-controls {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 22px;
+      display: flex;
+      justify-content: center;
+      gap: 22px;
+      z-index: 4;
+      pointer-events: auto;
+    }
+
+    .round-control {
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      color: white;
+      font-size: 25px;
+      background: rgba(0,0,0,.62);
+    }
+
+    .round-control.primary {
+      background: var(--turq);
+    }
+
     .stats {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -163,370 +503,241 @@
     }
 
     .stat {
-      background: rgba(255,255,255,.075);
-      border: 1px solid var(--border);
-      border-radius: 17px;
-      padding: 11px 6px;
+      border-radius: 14px;
+      padding: 13px 7px;
       text-align: center;
+      background: var(--soft);
     }
 
     .stat-number {
-      font-size: 27px;
+      font-size: 31px;
       font-weight: 950;
+      color: var(--text);
     }
 
     .stat-label {
       font-size: 12px;
       color: var(--muted);
+      font-weight: 800;
+      text-transform: uppercase;
       margin-top: 2px;
     }
 
-    .sync-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      margin-top: 12px;
-      flex-wrap: wrap;
+    #totalStat, #usedStat, #pendingStat {
+      display: inline;
     }
 
-    .sync-badge,
-    .mode-badge,
-    .zone-badge,
-    .confirm-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      border-radius: 999px;
-      padding: 7px 11px;
-      font-size: 13px;
-      font-weight: 850;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.08);
-    }
-
-    .sync-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: #94a3b8;
-    }
-
-    .sync-badge.online .sync-dot { background: #22c55e; }
-    .sync-badge.syncing .sync-dot { background: #f59e0b; }
-    .sync-badge.offline .sync-dot { background: #ef4444; }
-
-    .mode-badge.simulation {
-      background: rgba(217,119,6,.18);
-      border-color: rgba(245,158,11,.55);
-      color: #fde68a;
-    }
-
-
-    .access-zone-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 30px;
-      padding: 6px 11px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 900;
-      letter-spacing: .04em;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .access-zone-badge.patio {
-      color: #bfdbfe;
-      background: rgba(37, 99, 235, .16);
-      border-color: rgba(96, 165, 250, .3);
-    }
-
-    .access-zone-badge.palco {
-      color: #fbcfe8;
-      background: rgba(190, 24, 93, .16);
-      border-color: rgba(244, 114, 182, .3);
-    }
-
-    .access-zone-badge.all {
-      color: #fde68a;
-      background: rgba(217, 119, 6, .16);
-      border-color: rgba(251, 191, 36, .3);
-    }
-
-    .zone-setting {
-      display: grid;
-      gap: 9px;
-      width: 100%;
-    }
-
-    .zone-setting select {
-      margin-top: 2px;
-      font-weight: 800;
-    }
-
-    .zone-required {
-      color: #fecaca;
-      font-weight: 800;
+    .hidden-stats {
+      position: absolute;
+      left: -9999px;
+      top: -9999px;
+      pointer-events: none;
     }
 
     .notice {
       margin-top: 12px;
-      padding: 11px 13px;
-      border-radius: 15px;
-      background: rgba(245,158,11,.14);
-      border: 1px solid rgba(245,158,11,.45);
-      color: #fde68a;
-      font-size: 13px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #fff7dc;
+      border: 1px solid #f7df9e;
+      color: #7a4b05;
+      font-size: 14px;
       line-height: 1.4;
     }
 
-    .scanner-wrap {
-      overflow: hidden;
-      border-radius: 22px;
-      border: 1px solid var(--border);
-      background: #000;
-      margin-top: 14px;
-    }
-
-    #reader {
-      width: 100%;
-      min-height: 410px;
-      background: #000;
-    }
-
-    #reader video {
-      object-fit: cover !important;
-      border-radius: 22px;
-      pointer-events: none !important;
-    }
-
-    .scanner-wrap,
-    #reader {
-      position: relative;
-      z-index: 1;
-    }
-
-    .result {
-      min-height: 69vh;
-      border-radius: 26px;
-      border: 1px solid var(--border);
-      padding: 22px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      text-align: center;
-    }
-
-    .result.ok {
-      background: rgba(22,163,74,.23);
-      border-color: rgba(34,197,94,.65);
-    }
-
-    .result.simulation {
-      background: rgba(37,99,235,.23);
-      border-color: rgba(96,165,250,.65);
-    }
-
-    .result.duplicate {
-      background: rgba(217,119,6,.24);
-      border-color: rgba(251,191,36,.65);
-    }
-
-    .result.invalid,
-    .result.error {
-      background: rgba(220,38,38,.24);
-      border-color: rgba(248,113,113,.65);
-    }
-
-    .result-icon {
-      font-size: 68px;
-      line-height: 1;
-      margin-bottom: 10px;
-    }
-
-    .result-title {
-      font-size: 34px;
-      font-weight: 950;
-      letter-spacing: -.04em;
-    }
-
-    .result-name {
-      font-size: 23px;
-      font-weight: 850;
-      margin-top: 10px;
-    }
-
-    .zone-badge {
-      font-size: 20px;
-      margin-top: 12px;
-      padding: 8px 15px;
-    }
-
-    .zone-badge.palco {
-      background: var(--palco);
-      border-color: rgba(255,255,255,.25);
-    }
-
-    .zone-badge.salon {
-      background: var(--salon);
-      border-color: rgba(255,255,255,.25);
-    }
-
-    .seat-grid {
+    .search-tabs {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 18px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 14px 20px 11px;
+      background: #eeeeef;
     }
 
-    .seat-box {
-      background: rgba(255,255,255,.12);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 15px 10px;
+    .seg-btn {
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      font-size: 19px;
+      padding: 11px 4px;
+      border-radius: 14px;
     }
 
-    .seat-label {
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 800;
+    .seg-btn.active {
+      background: var(--navy);
+      color: white;
+      box-shadow: 0 5px 14px rgba(31,36,52,.18);
     }
 
-    .seat-value {
-      font-size: 43px;
-      font-weight: 950;
+    .search-box {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      border: 1px solid #9aa0aa;
+      border-radius: 13px;
+      padding: 0 13px 0 0;
+      margin: 0 20px 10px;
+    }
+
+    .search-box input {
+      border: 0;
+      border-radius: 13px;
+      min-height: 56px;
+      font-size: 19px;
+      background: transparent;
+    }
+
+    .search-icon {
+      font-size: 32px;
       line-height: 1;
-      margin-top: 5px;
+      color: #000;
     }
 
-    .time-box {
-      margin-top: 16px;
-      background: rgba(255,255,255,.10);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 13px;
-    }
-
-    .time-label {
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    .time-value {
-      font-size: 21px;
-      font-weight: 900;
-      margin-top: 4px;
-    }
-
-    .meta {
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.45;
-      margin-top: 11px;
-      word-break: break-word;
-    }
-
-    .confirm-badge {
-      margin-top: 13px;
-      justify-content: center;
-    }
-
-    .confirm-badge.pending {
-      color: #fde68a;
-      background: rgba(217,119,6,.18);
-    }
-
-    .confirm-badge.confirmed {
-      color: #bbf7d0;
-      background: rgba(22,163,74,.18);
+    .list-content {
+      padding-bottom: 18px;
     }
 
     .search-result,
     .log-item {
-      padding: 13px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.06);
-      margin-top: 10px;
+      padding: 18px 24px;
+      border-radius: 0;
+      border: 0;
+      border-bottom: 1px solid #d7dbe3;
+      background: #fff;
+      margin: 0;
     }
 
     .search-name,
     .log-name {
-      font-weight: 900;
-      font-size: 17px;
+      font-weight: 520;
+      font-size: 21px;
+      line-height: 1.34;
+      color: var(--text);
     }
 
     .search-meta,
     .log-meta {
-      color: var(--muted);
-      font-size: 13px;
+      color: #586275;
+      font-size: 16px;
       margin-top: 4px;
-      line-height: 1.4;
+      line-height: 1.35;
     }
 
     .search-actions {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      margin-top: 10px;
-    }
-
-    .section-title {
-      font-size: 19px;
-      font-weight: 950;
-      margin-bottom: 8px;
-    }
-
-    .dashboard-zone {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
       margin-top: 12px;
     }
 
-    .zone-card {
-      border-radius: 18px;
-      border: 1px solid var(--border);
-      padding: 14px;
-      background: rgba(255,255,255,.07);
+    .section-letter {
+      background: #cfd3da;
+      color: var(--text);
+      font-weight: 900;
+      font-size: 17px;
+      padding: 4px 12px;
     }
 
-    .zone-card.palco { border-left: 5px solid #a64c61; }
-    .zone-card.salon { border-left: 5px solid #3b82c4; }
-
-    .zone-card-title {
+    .setting-title {
+      font-size: 28px;
       font-weight: 950;
-      font-size: 16px;
+      color: #111;
+      margin: 25px 20px 12px;
     }
 
-    .zone-card-value {
-      font-size: 27px;
-      font-weight: 950;
-      margin-top: 5px;
+    .settings-card {
+      margin: 0 20px 12px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: white;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .status-ok {
+      margin: 18px 20px 22px;
+      background: var(--green-soft);
+      border-radius: 10px;
+      padding: 18px 16px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      color: #111;
+    }
+
+    .status-ok .dot {
+      width: 20px;
+      height: 20px;
+      background: var(--green);
+      border-radius: 999px;
+      flex: 0 0 auto;
+    }
+
+    .status-ok strong {
+      display: block;
+      font-size: 24px;
+      line-height: 1.1;
+    }
+
+    .status-ok span {
+      display: block;
+      font-size: 18px;
+      margin-top: 8px;
     }
 
     .setting-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
-      padding: 13px 0;
-      border-bottom: 1px solid rgba(255,255,255,.08);
+      gap: 14px;
+      min-height: 76px;
+      padding: 16px 17px;
+      border-bottom: 1px solid var(--line2);
+      color: #111;
+      background: white;
     }
 
     .setting-row:last-child {
       border-bottom: 0;
     }
 
+    .setting-row .leading {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    .setting-icon {
+      width: 34px;
+      font-size: 29px;
+      text-align: center;
+      color: #1e2433;
+    }
+
+    .setting-main {
+      font-size: 21px;
+      line-height: 1.18;
+      font-weight: 450;
+    }
+
+    .setting-sub {
+      color: #4c5668;
+      font-size: 16px;
+      margin-top: 4px;
+    }
+
+    .chevron {
+      color: #111;
+      font-size: 34px;
+      line-height: 1;
+    }
+
     .switch {
       position: relative;
-      width: 54px;
-      height: 32px;
+      width: 74px;
+      height: 46px;
       flex: 0 0 auto;
     }
 
@@ -540,28 +751,29 @@
       position: absolute;
       inset: 0;
       border-radius: 999px;
-      background: #475569;
+      background: #f0f1f5;
       transition: .2s;
     }
 
     .slider:before {
       content: "";
       position: absolute;
-      width: 24px;
-      height: 24px;
-      left: 4px;
-      top: 4px;
+      width: 34px;
+      height: 34px;
+      left: 6px;
+      top: 6px;
       border-radius: 50%;
       background: white;
       transition: .2s;
+      box-shadow: 0 2px 7px rgba(0,0,0,.12);
     }
 
     .switch input:checked + .slider {
-      background: var(--warn);
+      background: var(--turq);
     }
 
     .switch input:checked + .slider:before {
-      transform: translateX(22px);
+      transform: translateX(28px);
     }
 
     .bottom-nav {
@@ -570,39 +782,143 @@
       bottom: 0;
       transform: translateX(-50%);
       width: min(620px, 100%);
-      padding: 9px 10px calc(9px + env(safe-area-inset-bottom));
-      background: rgba(2,6,23,.94);
-      backdrop-filter: blur(18px);
-      border-top: 1px solid var(--border);
+      height: calc(92px + env(safe-area-inset-bottom));
+      padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+      background: #eeeeef;
+      border-top: 1px solid #d9d9dc;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-      z-index: 2147483647;
-      pointer-events: auto;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      z-index: 50;
     }
 
     .nav-btn {
       border: 0;
       background: transparent;
-      color: var(--muted);
-      border-radius: 14px;
-      padding: 8px 4px;
-      min-height: 53px;
-      font-size: 11px;
-      font-weight: 800;
-      position: relative;
-      z-index: 2147483647;
-      touch-action: manipulation;
+      color: #222934;
+      border-radius: 12px;
+      padding: 6px 2px;
+      min-height: 72px;
+      font-size: 17px;
+      font-weight: 450;
+      display: grid;
+      justify-items: center;
+      align-content: center;
+      gap: 4px;
     }
 
     .nav-btn .nav-icon {
       display: block;
-      font-size: 21px;
-      margin-bottom: 2px;
+      font-size: 31px;
+      line-height: 1;
     }
 
     .nav-btn.active {
-      background: rgba(37,99,235,.18);
+      color: var(--turq);
+      background: transparent;
+    }
+
+    .mobile-only-actions {
+      display: none;
+    }
+
+    .dashboard-page {
+      padding: 26px 20px;
+      background: white;
+      min-height: calc(100vh - 118px - 92px);
+    }
+
+    .stat-large {
+      border-radius: 12px;
+      background: #ededee;
+      text-align: center;
+      padding: 18px 12px;
+      margin-bottom: 14px;
+    }
+
+    .stat-large.green {
+      background: var(--green);
+      color: white;
+    }
+
+    .stat-large .num {
+      font-size: 36px;
+      font-weight: 950;
+      line-height: .95;
+    }
+
+    .stat-large .label {
+      font-size: 17px;
+      text-transform: uppercase;
+      margin-top: 6px;
+      letter-spacing: .02em;
+    }
+
+    .dashboard-title {
+      font-size: 23px;
+      font-weight: 850;
+      color: #111;
+      margin: 25px 0 14px;
+    }
+
+    .tariff-card {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      overflow: hidden;
+      background: white;
+      margin-bottom: 18px;
+    }
+
+    .tariff-head {
+      padding: 17px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 21px;
+      border-bottom: 1px solid var(--line2);
+    }
+
+    .tariff-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      align-items: center;
+      gap: 10px;
+      margin: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .tariff-name {
+      padding: 16px 12px 16px 22px;
+      font-size: 20px;
+      position: relative;
+    }
+
+    .tariff-name::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 22px;
+      background: #c9f4cb;
+    }
+
+    .pill-num {
+      min-width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      background: #ededee;
+      color: #111;
+      padding: 0 10px;
+    }
+
+    .pill-num.green {
+      background: var(--green);
       color: white;
     }
 
@@ -619,37 +935,206 @@
 
     .modal-card {
       width: min(580px, 100%);
-      background: #111827;
-      border: 1px solid var(--border);
-      border-radius: 24px;
+      background: white;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 18px;
       padding: 18px;
       margin-bottom: env(safe-area-inset-bottom);
     }
 
+    .section-title {
+      font-size: 23px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .result {
+      min-height: calc(100vh - 92px);
+      border-radius: 0;
+      border: 0;
+      padding: calc(28px + env(safe-area-inset-top)) 22px 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+      background: white;
+      color: var(--text);
+    }
+
+    .result.ok {
+      background: var(--green);
+      color: white;
+    }
+
+    .result.simulation {
+      background: var(--turq);
+      color: white;
+    }
+
+    .result.duplicate {
+      background: #fff3d7;
+      color: #4b3200;
+    }
+
+    .result.invalid,
+    .result.error {
+      background: var(--red);
+      color: white;
+    }
+
+    .result-icon {
+      font-size: 78px;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+
+    .result-title {
+      font-size: 36px;
+      font-weight: 950;
+      letter-spacing: -.035em;
+    }
+
+    .result-name {
+      font-size: 24px;
+      font-weight: 750;
+      margin-top: 12px;
+    }
+
+    .zone-badge,
+    .confirm-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 8px 15px;
+      font-size: 16px;
+      margin-top: 13px;
+      font-weight: 800;
+      background: rgba(255,255,255,.18);
+      color: inherit;
+      border: 1px solid rgba(255,255,255,.25);
+    }
+
+    .seat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .seat-box,
+    .time-box {
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 14px;
+      padding: 15px 10px;
+    }
+
+    .seat-label,
+    .time-label {
+      opacity: .78;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .seat-value {
+      font-size: 43px;
+      font-weight: 950;
+      line-height: 1;
+      margin-top: 5px;
+    }
+
+    .time-box {
+      margin-top: 16px;
+    }
+
+    .time-value {
+      font-size: 19px;
+      font-weight: 900;
+      margin-top: 4px;
+    }
+
+    .meta {
+      opacity: .78;
+      font-size: 13px;
+      line-height: 1.45;
+      margin-top: 13px;
+      word-break: break-word;
+    }
+
     .preflight-ok {
-      color: #bbf7d0;
+      color: #087d25;
     }
 
     .preflight-warning {
-      color: #fde68a;
+      color: #9d5a00;
     }
 
-    .small-text {
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.4;
+    .mode-badge,
+    .access-zone-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 850;
+      background: rgba(255,255,255,.12);
+      color: rgba(255,255,255,.75);
+    }
+
+    #accessZoneBadge {
+      margin-left: 5px;
+    }
+
+    .danger-bottom {
+      margin: 72px 20px 20px;
+    }
+
+    @media (max-width: 430px) {
+      .event-title {
+        max-width: 250px;
+      }
+
+      .big-count {
+        font-size: 36px;
+      }
+
+      .top-actions {
+        gap: 10px;
+      }
+
+      .icon-btn {
+        width: 33px;
+        height: 33px;
+        font-size: 27px;
+      }
+
+      .manual-label {
+        font-size: 22px;
+      }
+
+      .search-name {
+        font-size: 19px;
+      }
+
+      .search-meta {
+        font-size: 15px;
+      }
     }
   </style>
 </head>
 
 <body>
-  <div class="app">
-    <section id="loginView" class="card">
-      <div class="title">Control de entradas</div>
-      <div class="subtitle">Introduce la clave y un nombre reconocible para este móvil.</div>
+  <section id="loginView" class="login">
+    <div class="login-card">
+      <div class="login-logo">▦</div>
+      <div class="login-title">Control de entradas</div>
+      <div class="login-subtitle">Carga tu dispositivo y empieza a validar accesos.</div>
 
       <div class="mt">
-        <input id="deviceNameInput" type="text" maxlength="60" placeholder="Ej.: Puerta principal 1">
+        <input id="deviceNameInput" type="text" maxlength="60" placeholder="Usuario del agente / dispositivo">
       </div>
 
       <div class="mt">
@@ -657,125 +1142,159 @@
       </div>
 
       <div class="mt">
-        <button type="button" id="loginButton" class="btn" onclick="login()">Entrar</button>
+        <button type="button" id="loginButton" class="btn" onclick="login()">Iniciar control</button>
       </div>
 
-      <div class="small-text mt">La lista se guarda localmente en este dispositivo para que el escaneo sea instantáneo.</div>
-    </section>
+      <div class="small-text mt">La lista se guarda localmente en este dispositivo para que el escaneo siga funcionando aunque falle internet.</div>
+    </div>
+  </section>
 
-    <main id="mainApp" class="hidden">
-      <section id="scannerTab" class="tab-view">
-        <div class="card">
-          <div class="sync-row" style="margin-top:0">
+  <div id="appView" class="app hidden">
+    <header class="top-shell">
+      <div>
+        <div class="event-title">Control de entradas</div><div id="deviceLabel" class="hidden"></div>
+        <div class="big-count"><span id="usedStat">-</span>/<span id="totalStat">-</span></div>
+        <div class="hidden-stats"><span id="pendingStat">-</span></div>
+      </div>
+
+      <div class="top-actions">
+        <div id="syncBadge" class="sync-badge syncing" title="Estado de sincronización">
+          <span class="sync-dot"></span><span id="syncText">Sincronizando...</span>
+        </div>
+        <button type="button" class="icon-btn" onclick="syncNow(true)" aria-label="Sincronizar">↻</button>
+        <button type="button" id="navDashboard" class="icon-btn" data-tab="dashboard" aria-label="Estadísticas">▥</button>
+        <button type="button" id="navSettings" class="icon-btn" data-tab="settings" aria-label="Ajustes">⚙</button>
+      </div>
+    </header>
+
+    <main id="mainApp">
+      <section id="manualTab" class="tab-view page">
+        <div class="manual-wrap">
+          <div class="manual-center">
             <div>
-              <div class="title">Escanear</div>
-              <div id="deviceLabel" class="subtitle"></div>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px">
-              <div id="modeBadge" class="mode-badge">MODO REAL</div>
-              <div id="accessZoneBadge" class="access-zone-badge">ZONA SIN CONFIGURAR</div>
+              <div class="manual-label">Introduce el código de barras</div>
+              <input id="manualCodeInput" class="manual-input mt" type="text" inputmode="text" placeholder="EV26-XXXX-XXXX">
             </div>
           </div>
+          <button type="button" id="manualValidateButton" class="btn" onclick="const v=document.getElementById('manualCodeInput').value.trim(); if(!v) return; manualCheckIn(normalizeCode(v)); document.getElementById('manualCodeInput').value='';">Validar</button>
+        </div>
+      </section>
 
-          <div class="stats mt">
-            <div class="stat">
-              <div id="totalStat" class="stat-number">-</div>
-              <div class="stat-label">Total</div>
-            </div>
-            <div class="stat">
-              <div id="usedStat" class="stat-number">-</div>
-              <div class="stat-label">Dentro</div>
-            </div>
-            <div class="stat">
-              <div id="pendingStat" class="stat-number">-</div>
-              <div class="stat-label">Pendientes</div>
-            </div>
+      <section id="scannerTab" class="tab-view page hidden">
+        <div class="scanner-wrap">
+          <div id="reader"></div>
+          <div class="scanner-overlay">
+            <div class="scan-mode-pill">Modo ENTRADA</div>
+            <div class="scan-frame"><div class="scan-corners"></div></div>
           </div>
-
-          <div class="sync-row">
-            <div id="syncBadge" class="sync-badge syncing">
-              <span class="sync-dot"></span>
-              <span id="syncText">Sincronizando...</span>
-            </div>
-            <span id="lastSyncText" class="small-text">Sin datos</span>
-          </div>
-
-          <div id="pendingNotice" class="notice hidden"></div>
-
-          <div class="scanner-wrap">
-            <div id="reader"></div>
-          </div>
-
-          <div class="grid2 mt">
-            <button type="button" id="restartCameraButton" class="btn secondary small" onclick="restartScanner()">Reiniciar cámara</button>
-            <button type="button" class="btn secondary small" onclick="syncNow(true)">Forzar sincronización</button>
+          <div class="scanner-controls">
+            <button type="button" class="round-control" onclick="toggleSimulationMode()" aria-label="Modo simulacro">⌁</button>
+            <button type="button" id="restartCameraButton" class="round-control primary" onclick="restartScanner()" aria-label="Reiniciar cámara">↻</button>
           </div>
         </div>
       </section>
 
-      <section id="searchTab" class="tab-view hidden">
-        <div class="card">
-          <div class="title">Buscar entrada</div>
-          <div class="subtitle">Busca por nombre, código, zona, fila o butaca.</div>
-          <input id="searchInput" class="mt" type="search" placeholder="Escribe para buscar..." oninput="renderSearchResults()">
-          <div id="searchResults" class="mt"></div>
+      <section id="searchTab" class="tab-view page hidden">
+        <div class="search-tabs">
+          <button type="button" class="seg-btn active">Todos</button>
+          <button type="button" class="seg-btn">Dentro</button>
+          <button type="button" class="seg-btn">Fuera</button>
+          <button type="button" class="seg-btn">Faltan</button>
         </div>
+
+        <div class="search-box">
+          <input id="searchInput" type="search" placeholder="Apellidos, nombre, código de barras" oninput="renderSearchResults()">
+          <span class="search-icon">⌕</span>
+        </div>
+
+        <div id="searchResults" class="list-content"></div>
       </section>
 
-      <section id="dashboardTab" class="tab-view hidden">
-        <div class="card">
-          <div class="sync-row" style="margin-top:0">
-            <div>
-              <div class="title">Resumen</div>
-              <div class="subtitle">Estado general del acceso.</div>
-            </div>
-            <button type="button" class="btn secondary small inline" onclick="loadDashboard()">Actualizar</button>
+      <section id="dashboardTab" class="tab-view page hidden">
+        <div class="dashboard-page">
+          <div class="stat-large">
+            <div id="dashTotal" class="num">-</div>
+            <div class="label">Asistentes</div>
           </div>
 
-          <div class="stats mt">
-            <div class="stat">
-              <div id="dashTotal" class="stat-number">-</div>
-              <div class="stat-label">Total</div>
+          <div class="stat-large green">
+            <div id="dashUsed" class="num">-</div>
+            <div class="label">Escaneado entrada</div>
+          </div>
+
+          <div class="dashboard-title">Detalles por zona</div>
+
+          <div class="tariff-card">
+            <div class="tariff-head">
+              <span>Control de entradas</span>
+              <span>⌄</span>
             </div>
-            <div class="stat">
-              <div id="dashUsed" class="stat-number">-</div>
-              <div class="stat-label">Dentro</div>
+            <div class="tariff-row">
+              <div class="tariff-name">Salón principal</div>
+              <div id="dashSalon" class="pill-num green">-</div>
+              <div id="dashSalonPending" class="pill-num">-</div>
+              <div class="pill-num">%</div>
             </div>
-            <div class="stat">
-              <div id="dashDevices" class="stat-number">-</div>
-              <div class="stat-label">Dispositivos</div>
+            <div class="tariff-row">
+              <div class="tariff-name">Palco</div>
+              <div id="dashPalco" class="pill-num green">-</div>
+              <div id="dashPalcoPending" class="pill-num">-</div>
+              <div class="pill-num">%</div>
             </div>
           </div>
 
-          <div class="dashboard-zone">
-            <div class="zone-card salon">
-              <div class="zone-card-title">SALÓN</div>
-              <div id="dashSalon" class="zone-card-value">-</div>
-              <div id="dashSalonPending" class="small-text"></div>
-            </div>
-            <div class="zone-card palco">
-              <div class="zone-card-title">PALCO</div>
-              <div id="dashPalco" class="zone-card-value">-</div>
-              <div id="dashPalcoPending" class="small-text"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="section-title">Últimos movimientos</div>
+          <div class="dashboard-title">Últimos movimientos</div>
           <div id="recentLogs"></div>
+
+          <div class="hidden"><span id="dashDevices">-</span></div>
         </div>
       </section>
 
-      <section id="settingsTab" class="tab-view hidden">
-        <div class="card">
-          <div class="title">Ajustes</div>
-          <div class="subtitle">Opciones del dispositivo y herramientas de coordinación.</div>
+      <section id="settingsTab" class="tab-view page hidden">
+        <div class="status-ok">
+          <span class="dot"></span>
+          <div>
+            <strong>Sincronizado</strong>
+            <span>Tu dispositivo está sincronizado</span>
+          </div>
+        </div>
 
-          <div class="setting-row mt">
+        <div class="settings-card">
+          <div class="setting-row">
+            <div class="leading">
+              <div class="setting-icon">◉</div>
+              <div>
+                <div class="setting-main">Usuario del agente</div>
+                <div id="settingsDeviceName" class="setting-sub"></div>
+              </div>
+            </div>
+            <div class="chevron">›</div>
+          </div>
+
+          <div class="setting-row">
+            <div class="leading">
+              <div class="setting-icon">●</div>
+              <div>
+                <div class="setting-main">Zona de acceso</div>
+                <div id="accessZoneHelp" class="setting-sub">Debes seleccionar Patio o Palco antes de escanear.</div>
+              </div>
+            </div>
+            <select id="accessZoneSelect" onchange="changeAccessZone()" style="max-width:150px;min-height:48px;font-size:16px">
+              <option value="">Zona...</option>
+              <option value="PATIO">Patio</option>
+              <option value="PALCO">Palco</option>
+              <option value="TODAS">Todas</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="setting-title">Opciones avanzadas</div>
+
+        <div class="settings-card">
+          <div class="setting-row">
             <div>
-              <div style="font-weight:900">Modo simulacro</div>
-              <div class="small-text">Valida y registra pruebas sin marcar entradas.</div>
+              <div class="setting-main">Escáner en modo SALIDA</div>
+              <div class="setting-sub">Gestiona salidas o pruebas sin marcar entradas</div>
             </div>
             <label class="switch">
               <input id="simulationToggle" type="checkbox" onchange="toggleSimulationMode()">
@@ -784,63 +1303,88 @@
           </div>
 
           <div class="setting-row">
-            <div class="zone-setting">
-              <div>
-                <div style="font-weight:900">Zona de acceso</div>
-                <div class="small-text">Este móvil solo aceptará entradas de la zona elegida.</div>
-              </div>
-              <select id="accessZoneSelect" onchange="changeAccessZone()">
-                <option value="">Selecciona una zona...</option>
-                <option value="PATIO">Patio</option>
-                <option value="PALCO">Palco</option>
-                <option value="TODAS">Todas · solo incidencias</option>
-              </select>
-              <div id="accessZoneHelp" class="small-text zone-required">Debes seleccionar Patio o Palco antes de escanear.</div>
-            </div>
-          </div>
-
-          <div class="setting-row">
             <div>
-              <div style="font-weight:900">Dispositivo</div>
-              <div id="settingsDeviceName" class="small-text"></div>
+              <div class="setting-main">Estado del lector</div>
+              <div class="setting-sub">
+                <span id="modeBadge">MODO REAL</span>
+                <span id="accessZoneBadge" class="access-zone-badge">ZONA SIN CONFIGURAR</span>
+                <span id="lastSyncText">Sin datos</span>
+              </div>
             </div>
           </div>
-
-          <div class="grid2 mt">
-            <button type="button" class="btn secondary small" onclick="syncNow(true)">Actualizar lista completa</button>
-            <button type="button" class="btn secondary small" onclick="runPreflight()">Comprobar sistema</button>
-          </div>
-
-          <div class="grid2 mt">
-            <button type="button" class="btn secondary small" onclick="createBackupFromApp()">Crear copia de seguridad</button>
-            <button type="button" class="btn secondary small" onclick="showUndoModal(lastAcceptedCode)">Deshacer último acceso</button>
-          </div>
-
-          <button type="button" class="btn danger mt" onclick="logout()">Cerrar sesión</button>
         </div>
 
-        <div id="preflightCard" class="card hidden">
+        <div id="pendingNotice" class="notice hidden" style="margin: 14px 20px"></div>
+
+        <div class="setting-title">Herramientas</div>
+
+        <div class="settings-card">
+          <div class="setting-row" onclick="syncNow(true)">
+            <div class="leading">
+              <div class="setting-icon">↻</div>
+              <div class="setting-main">Actualizar lista completa</div>
+            </div>
+            <div class="chevron">›</div>
+          </div>
+
+          <div class="setting-row" onclick="runPreflight()">
+            <div class="leading">
+              <div class="setting-icon">✓</div>
+              <div class="setting-main">Comprobar sistema</div>
+            </div>
+            <div class="chevron">›</div>
+          </div>
+
+          <div class="setting-row" onclick="createBackupFromApp()">
+            <div class="leading">
+              <div class="setting-icon">□</div>
+              <div class="setting-main">Crear copia de seguridad</div>
+            </div>
+            <div class="chevron">›</div>
+          </div>
+
+          <div class="setting-row" onclick="showUndoModal(lastAcceptedCode)">
+            <div class="leading">
+              <div class="setting-icon">↶</div>
+              <div class="setting-main">Deshacer último acceso</div>
+            </div>
+            <div class="chevron">›</div>
+          </div>
+        </div>
+
+        <div id="preflightCard" class="settings-card hidden" style="padding:16px">
           <div class="section-title">Comprobación del sistema</div>
           <div id="preflightContent"></div>
         </div>
+
+        <div class="danger-bottom">
+          <button type="button" class="btn danger" onclick="logout()">Cerrar la sesión de control</button>
+        </div>
+
+        <div class="small-text" style="text-align:center;margin-bottom:25px">v2.1 · Control de entradas</div>
       </section>
     </main>
 
     <section id="resultView" class="hidden">
       <div id="resultBox" class="result ok"></div>
-      <div class="grid2 mt">
+      <div class="grid2" style="padding: 12px 14px 20px;background:white">
         <button type="button" id="resultUndoButton" class="btn secondary" onclick="showUndoModal(currentResultCode)">Deshacer</button>
         <button type="button" class="btn" onclick="nextScan()">Siguiente</button>
       </div>
     </section>
-  </div>
 
-  <nav id="bottomNav" class="bottom-nav hidden">
-    <button type="button" id="navScanner" class="nav-btn active" data-tab="scanner"><span class="nav-icon">▣</span>Escanear</button>
-    <button type="button" id="navSearch" class="nav-btn" data-tab="search"><span class="nav-icon">⌕</span>Buscar</button>
-    <button type="button" id="navDashboard" class="nav-btn" data-tab="dashboard"><span class="nav-icon">▤</span>Resumen</button>
-    <button type="button" id="navSettings" class="nav-btn" data-tab="settings"><span class="nav-icon">⚙</span>Ajustes</button>
-  </nav>
+    <nav id="bottomNav" class="bottom-nav">
+      <button type="button" id="navManual" class="nav-btn" data-tab="manual">
+        <span class="nav-icon">▦</span>Manual
+      </button>
+      <button type="button" id="navScanner" class="nav-btn active" data-tab="scanner">
+        <span class="nav-icon">▣</span>Escáner
+      </button>
+      <button type="button" id="navSearch" class="nav-btn" data-tab="search">
+        <span class="nav-icon">⌕</span>Lista
+      </button>
+    </nav>
+  </div>
 
   <div id="undoModal" class="modal hidden">
     <div class="modal-card">
@@ -856,6 +1400,7 @@
   </div>
 
   <script>
+
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyXGG5TQd8qmr7yS_HV2OuVGHpf3slXDhi1EJXJPR_hh0kqU7Iyo3Lwz-dLtHwJ4n52/exec'
 
     const KEYS = {
@@ -1083,7 +1628,7 @@
     }
 
     function showTab(tab) {
-      const validTabs = ['scanner', 'search', 'dashboard', 'settings']
+      const validTabs = ['manual', 'scanner', 'search', 'dashboard', 'settings']
       if (!validTabs.includes(tab)) return
 
       document.getElementById('resultView').classList.add('hidden')
@@ -2259,6 +2804,7 @@
     function playError() {
       tone(250, .34, .25)
     }
+  
   </script>
 </body>
 </html>
