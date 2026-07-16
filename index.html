@@ -3,195 +3,612 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#1f2434">
+  <meta name="theme-color" content="#020617">
   <title>Control de entradas</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
 
   <style>
+
     :root {
-      --navy:#1f2434;
-      --navy2:#252b3d;
-      --turq:#32d2c3;
-      --green:#2fc92f;
-      --green-soft:#cdf5cd;
-      --red:#f03333;
-      --page:#f5f5f6;
-      --soft:#eeeeef;
-      --panel:#ffffff;
-      --line:#cfd3dd;
-      --line2:#e2e5eb;
-      --text:#1e2433;
-      --muted:#8d96a6;
-      --amber:#d97706;
+      --navy: #1f2434;
+      --navy-2: #252b3d;
+      --page: #f5f5f6;
+      --panel: #ffffff;
+      --soft: #eeeeef;
+      --line: #cfd3dd;
+      --line2: #e2e5eb;
+      --text: #1e2433;
+      --muted: #8992a2;
+      --turq: #32d2c3;
+      --turq-dark: #24b9aa;
+      --green: #2fc92f;
+      --green-soft: #cdf5cd;
+      --red: #f03333;
+      --amber: #d97706;
+      --palco: #7c2d3e;
+      --salon: #163c67;
     }
 
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{margin:0;min-height:100%;background:var(--page);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    body{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
-    button,input,select,textarea{font:inherit}
-    button{cursor:pointer}
-    .hidden{display:none!important}
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; min-height: 100%; background: var(--page); color: var(--text); font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .hidden { display: none !important; }
 
-    .app{max-width:620px;margin:0 auto;min-height:100vh;background:var(--page)}
+    .app { max-width: 620px; margin: 0 auto; padding: 0; min-height: 100vh; background: var(--page); }
 
-    .login{min-height:100vh;display:grid;place-items:center;padding:20px;background:var(--page)}
-    .login-card{width:min(460px,100%);background:#fff;border:1px solid var(--line);border-radius:28px;padding:26px;box-shadow:0 12px 34px rgba(15,23,42,.12)}
-    .login-logo{width:58px;height:58px;border-radius:20px;display:grid;place-items:center;background:var(--turq);color:var(--navy);font-size:29px;font-weight:950;margin-bottom:18px}
-    .login-title{font-size:32px;font-weight:950;letter-spacing:-.04em}
-    .login-subtitle{color:var(--muted);font-size:16px;line-height:1.42;margin-top:6px}
-
-    .top-shell{background:var(--navy);color:#fff;padding:calc(16px + env(safe-area-inset-top)) 16px 18px;min-height:118px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;position:sticky;top:0;z-index:30}
-    .event-title{color:rgba(255,255,255,.82);font-size:16px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:330px}
-    .big-count{margin-top:3px;font-size:40px;line-height:.95;letter-spacing:-.06em;color:var(--turq);font-weight:950}
-    .top-actions{display:flex;align-items:center;gap:16px;padding-bottom:5px}
-    .icon-btn{border:0;background:transparent;color:#fff;width:36px;height:36px;display:grid;place-items:center;padding:0;font-size:29px;line-height:1;border-radius:12px}
-    .icon-btn.active{color:var(--turq)}
-
-    .sync-badge{display:inline-flex;align-items:center;gap:8px;font-size:0}
-    .sync-dot{width:16px;height:16px;border-radius:999px;background:var(--green)}
-    .sync-badge.syncing .sync-dot{background:var(--amber)}
-    .sync-badge.offline .sync-dot{background:var(--red)}
-    .sync-badge.online .sync-dot{background:var(--green)}
-    #syncText{display:none}
-
-    .page{min-height:calc(100vh - 118px - 92px);background:var(--page)}
-    .content{padding:18px 20px 24px}
-    .mt{margin-top:16px}
-    .small-text{color:var(--muted);font-size:14px;line-height:1.4}
-
-    input,select,textarea,.input{width:100%;min-height:62px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--text);padding:13px 15px;outline:none;font-size:18px}
-    input::placeholder,textarea::placeholder{color:#a6adba}
-    textarea{min-height:100px;resize:vertical}
-
-    .btn{width:100%;min-height:64px;border:0;border-radius:9px;background:var(--turq);color:#fff;font-size:20px;font-weight:850;padding:13px 16px}
-    .btn:disabled{opacity:.42;cursor:default;background:#e7e7e8;color:#8d94a3}
-    .btn.secondary{background:#fff;color:var(--text);border:1px solid var(--line)}
-    .btn.danger{background:#fff;color:var(--red);border:1.5px solid var(--red)}
-    .btn.small{min-height:48px;font-size:15px;border-radius:10px}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
-    .manual-wrap{display:grid;min-height:calc(100vh - 118px - 92px);grid-template-rows:1fr auto;padding:0 20px 22px}
-    .manual-center{display:flex;flex-direction:column;justify-content:center;gap:18px;text-align:center;min-height:430px}
-    .manual-label{font-size:26px;font-weight:450;color:#111}
-    .manual-input{text-align:center;font-size:23px;min-height:60px;border-radius:9px;border:1px solid var(--line);color:var(--text)}
-
-    .scanner-wrap{overflow:hidden;background:#050505;min-height:calc(100vh - 118px - 92px);position:relative;border:0;border-radius:0}
-    #reader{width:100%;min-height:calc(100vh - 118px - 92px);background:#000}
-    #reader video{object-fit:cover!important;min-height:calc(100vh - 118px - 92px);pointer-events:none!important}
-    .scanner-overlay{position:absolute;inset:0;pointer-events:none;display:grid;grid-template-rows:auto 1fr auto;justify-items:center;padding-top:20px;z-index:2}
-    .scan-mode-pill{background:rgba(31,36,52,.94);color:#fff;border-radius:9px;padding:9px 16px;font-size:17px;font-weight:500}
-    .scan-frame{width:260px;height:260px;align-self:center;position:relative;margin-top:30px}
-    .scan-frame::before,.scan-frame::after,.scan-corners::before,.scan-corners::after{content:"";position:absolute;width:78px;height:78px;border-color:#fff;border-style:solid}
-    .scan-frame::before{left:0;top:0;border-width:6px 0 0 6px;border-radius:18px 0 0 0}
-    .scan-frame::after{right:0;top:0;border-width:6px 6px 0 0;border-radius:0 18px 0 0}
-    .scan-corners::before{left:0;bottom:0;border-width:0 0 6px 6px;border-radius:0 0 0 18px}
-    .scan-corners::after{right:0;bottom:0;border-width:0 6px 6px 0;border-radius:0 0 18px 0}
-    .scanner-controls{position:absolute;left:0;right:0;bottom:22px;display:flex;justify-content:center;gap:22px;z-index:4;pointer-events:auto}
-    .round-control{width:56px;height:56px;border-radius:999px;display:grid;place-items:center;border:0;color:#fff;font-size:25px;background:rgba(0,0,0,.62)}
-    .round-control.primary{background:var(--turq)}
-
-    .search-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 20px 11px;background:#eeeeef}
-    .seg-btn{border:0;background:transparent;color:var(--text);font-size:19px;padding:11px 4px;border-radius:14px}
-    .seg-btn.active{background:var(--navy);color:#fff;box-shadow:0 5px 14px rgba(31,36,52,.18)}
-    .search-box{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;background:#fff;border:1px solid #9aa0aa;border-radius:13px;padding:0 13px 0 0;margin:0 20px 10px}
-    .search-box input{border:0;border-radius:13px;min-height:56px;font-size:19px;background:transparent}
-    .search-icon{font-size:32px;line-height:1;color:#000}
-    .list-content{padding-bottom:18px}
-    .section-letter{background:#cfd3da;color:var(--text);font-weight:900;font-size:17px;padding:4px 12px}
-    .search-result,.log-item{padding:18px 24px;border-radius:0;border:0;border-bottom:1px solid #d7dbe3;background:#fff;margin:0}
-    .search-name,.log-name{font-weight:520;font-size:21px;line-height:1.34;color:var(--text)}
-    .search-meta,.log-meta{color:#586275;font-size:16px;margin-top:4px;line-height:1.35}
-    .search-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-    .empty-list{padding:30px 20px;text-align:center;color:var(--muted);font-size:17px}
-
-    .dashboard-page{padding:26px 20px;background:#fff;min-height:calc(100vh - 118px - 92px)}
-    .stat-large{border-radius:12px;background:#ededee;text-align:center;padding:18px 12px;margin-bottom:14px}
-    .stat-large.green{background:var(--green);color:#fff}
-    .stat-large .num{font-size:36px;font-weight:950;line-height:.95}
-    .stat-large .label{font-size:17px;text-transform:uppercase;margin-top:6px;letter-spacing:.02em}
-    .dashboard-title{font-size:23px;font-weight:850;color:#111;margin:25px 0 14px}
-    .tariff-card{border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff;margin-bottom:18px}
-    .tariff-head{padding:17px 22px;display:flex;justify-content:space-between;align-items:center;font-size:21px;border-bottom:1px solid var(--line2)}
-    .tariff-row{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:10px;margin:16px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-    .tariff-name{padding:16px 12px 16px 22px;font-size:20px;position:relative}
-    .tariff-name::before{content:"";position:absolute;left:0;top:0;bottom:0;width:22px;background:#c9f4cb}
-    .pill-num{min-width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:#ededee;color:#111;padding:0 10px}
-    .pill-num.green{background:var(--green);color:#fff}
-
-    .status-ok{margin:18px 20px 22px;background:var(--green-soft);border-radius:10px;padding:18px 16px;display:flex;align-items:center;gap:15px;color:#111}
-    .status-ok .dot{width:20px;height:20px;background:var(--green);border-radius:999px;flex:0 0 auto}
-    .status-ok strong{display:block;font-size:24px;line-height:1.1}
-    .status-ok span{display:block;font-size:18px;margin-top:8px}
-    .setting-title{font-size:28px;font-weight:950;color:#111;margin:25px 20px 12px}
-    .settings-card{margin:0 20px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;padding:0;overflow:hidden}
-    .setting-row{display:flex;justify-content:space-between;align-items:center;gap:14px;min-height:76px;padding:16px 17px;border-bottom:1px solid var(--line2);color:#111;background:#fff}
-    .setting-row:last-child{border-bottom:0}
-    .leading{display:flex;align-items:center;gap:16px;min-width:0}
-    .setting-icon{width:34px;font-size:29px;text-align:center;color:#1e2433}
-    .setting-main{font-size:21px;line-height:1.18;font-weight:450}
-    .setting-sub{color:#4c5668;font-size:16px;margin-top:4px}
-    .chevron{color:#111;font-size:34px;line-height:1}
-
-    .switch{position:relative;width:74px;height:46px;flex:0 0 auto}
-    .switch input{opacity:0;width:0;height:0}
-    .slider{position:absolute;inset:0;border-radius:999px;background:#f0f1f5;transition:.2s}
-    .slider:before{content:"";position:absolute;width:34px;height:34px;left:6px;top:6px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 2px 7px rgba(0,0,0,.12)}
-    .switch input:checked+.slider{background:var(--turq)}
-    .switch input:checked+.slider:before{transform:translateX(28px)}
-
-    .mode-badge,.access-zone-badge{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:850;background:#eef0f4;color:#4c5668}
-    .notice{margin-top:12px;padding:12px 14px;border-radius:12px;background:#fff7dc;border:1px solid #f7df9e;color:#7a4b05;font-size:14px;line-height:1.4}
-
-    .bottom-nav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(620px,100%);height:calc(92px + env(safe-area-inset-bottom));padding:8px 6px calc(8px + env(safe-area-inset-bottom));background:#eeeeef;border-top:1px solid #d9d9dc;display:grid;grid-template-columns:repeat(3,1fr);gap:2px;z-index:50}
-    .nav-btn{border:0;background:transparent;color:#222934;border-radius:12px;padding:6px 2px;min-height:72px;font-size:17px;font-weight:450;display:grid;justify-items:center;align-content:center;gap:4px}
-    .nav-btn .nav-icon{display:block;font-size:31px;line-height:1}
-    .nav-btn.active{color:var(--turq);background:transparent}
-
-    .modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;justify-content:center;padding:14px}
-    .modal-card{width:min(580px,100%);background:#fff;color:var(--text);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:env(safe-area-inset-bottom)}
-    .section-title{font-size:23px;font-weight:900;margin-bottom:8px}
-
-    .result{min-height:calc(100vh - 92px);border-radius:0;border:0;padding:calc(28px + env(safe-area-inset-top)) 22px 22px;display:flex;flex-direction:column;justify-content:center;text-align:center;background:#fff;color:var(--text)}
-    .result.ok{background:var(--green);color:#fff}
-    .result.simulation{background:var(--turq);color:#fff}
-    .result.duplicate{background:#fff3d7;color:#4b3200}
-    .result.invalid,.result.error{background:var(--red);color:#fff}
-    .result-icon{font-size:78px;line-height:1;margin-bottom:12px}
-    .result-title{font-size:36px;font-weight:950;letter-spacing:-.035em}
-    .result-name{font-size:24px;font-weight:750;margin-top:12px}
-    .zone-badge,.confirm-badge{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:8px 15px;font-size:16px;margin-top:13px;font-weight:800;background:rgba(255,255,255,.18);color:inherit;border:1px solid rgba(255,255,255,.25)}
-    .seat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}
-    .seat-box,.time-box{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.22);border-radius:14px;padding:15px 10px}
-    .seat-label,.time-label{opacity:.78;font-size:14px;font-weight:800}
-    .seat-value{font-size:43px;font-weight:950;line-height:1;margin-top:5px}
-    .time-box{margin-top:16px}
-    .time-value{font-size:19px;font-weight:900;margin-top:4px}
-    .meta{opacity:.78;font-size:13px;line-height:1.45;margin-top:13px;word-break:break-word}
-
-    .danger-bottom{margin:72px 20px 20px}
-    .preflight-ok{color:#087d25}
-    .preflight-warning{color:#9d5a00}
-
-    .hidden-stats{position:absolute;left:-9999px;top:-9999px;pointer-events:none}
-
-    @media(max-width:430px){
-      .event-title{max-width:250px}
-      .big-count{font-size:36px}
-      .top-actions{gap:10px}
-      .icon-btn{width:33px;height:33px;font-size:27px}
-      .manual-label{font-size:22px}
-      .search-name{font-size:19px}
-      .search-meta{font-size:15px}
+    #loginView.card {
+      width: min(460px, calc(100% - 32px));
+      margin: 40px auto 0;
+      padding: 26px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      box-shadow: 0 12px 34px rgba(15, 23, 42, .12);
     }
+    #loginView::before {
+      content: "▦";
+      width: 58px;
+      height: 58px;
+      border-radius: 20px;
+      display: grid;
+      place-items: center;
+      color: var(--navy);
+      background: var(--turq);
+      font-size: 29px;
+      font-weight: 950;
+      margin-bottom: 18px;
+    }
+
+    .title { font-size: 32px; line-height: 1.05; font-weight: 950; letter-spacing: -.04em; color: var(--text); }
+    .subtitle { color: var(--muted); font-size: 16px; margin-top: 6px; line-height: 1.4; }
+    .mt { margin-top: 16px; }
+    .mb { margin-bottom: 16px; }
+    .small-text { color: var(--muted); font-size: 14px; line-height: 1.4; }
+
+    .input, input, select, textarea {
+      width: 100%;
+      min-height: 58px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      padding: 13px 15px;
+      outline: none;
+      font-size: 18px;
+    }
+    textarea { min-height: 100px; resize: vertical; }
+    input::placeholder, textarea::placeholder { color: #a6adba; }
+
+    .btn {
+      width: 100%;
+      min-height: 60px;
+      border: 0;
+      border-radius: 9px;
+      background: var(--turq);
+      color: white;
+      font-size: 19px;
+      font-weight: 850;
+      padding: 13px 16px;
+    }
+    .btn:disabled { opacity: .42; cursor: default; background: #e7e7e8; color: #8d94a3; }
+    .btn.secondary { background: #fff; color: var(--text); border: 1px solid var(--line); }
+    .btn.danger { background: #fff; color: var(--red); border: 1.5px solid var(--red); }
+    .btn.small { min-height: 46px; font-size: 15px; border-radius: 10px; }
+    .btn.inline { width: auto; padding-left: 18px; padding-right: 18px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    #scannerTab > .card:first-child {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: var(--page);
+      box-shadow: none;
+    }
+    #scannerTab > .card:first-child > .sync-row:first-child {
+      margin: 0;
+      min-height: 118px;
+      padding: calc(16px + env(safe-area-inset-top)) 16px 18px;
+      background: var(--navy);
+      color: #fff;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+    #scannerTab > .card:first-child > .sync-row:first-child .title {
+      color: rgba(255,255,255,.82);
+      font-size: 16px;
+      line-height: 1.1;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 330px;
+    }
+    #deviceLabel {
+      color: var(--turq);
+      font-size: 40px;
+      line-height: .95;
+      font-weight: 950;
+      letter-spacing: -.06em;
+      margin-top: 4px;
+    }
+
+    #modeBadge, #accessZoneBadge { display: none; }
+
+    .sync-badge, .mode-badge, .zone-badge, .confirm-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 850;
+      border: 0;
+      background: rgba(255,255,255,.10);
+      color: rgba(255,255,255,.78);
+    }
+    .sync-dot { width: 16px; height: 16px; border-radius: 999px; background: var(--green); }
+    .sync-badge.online .sync-dot { background: var(--green); }
+    .sync-badge.syncing .sync-dot { background: var(--amber); }
+    .sync-badge.offline .sync-dot { background: var(--red); }
+    #syncText { display: none; }
+    #lastSyncText { color: var(--muted); font-size: 13px; }
+
+    #scannerTab .stats { position: absolute; left: -9999px; top: -9999px; pointer-events: none; }
+    #scannerTab .sync-row:nth-of-type(2) {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      top: calc(82px + env(safe-area-inset-top));
+      z-index: 32;
+      display: flex;
+      justify-content: flex-end;
+      pointer-events: none;
+    }
+    #scannerTab .sync-row:nth-of-type(2) .small-text { display: none; }
+
+    .scanner-wrap {
+      overflow: hidden;
+      border-radius: 0;
+      border: 0;
+      background: #000;
+      margin-top: 0;
+      position: relative;
+      min-height: calc(100vh - 118px - 92px);
+    }
+    #reader { width: 100%; min-height: calc(100vh - 118px - 92px); background: #000; }
+    #reader video { object-fit: cover !important; min-height: calc(100vh - 118px - 92px); border-radius: 0; pointer-events: none !important; }
+
+    .scanner-wrap::before {
+      content: "Modo ENTRADA";
+      position: absolute;
+      top: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      background: rgba(31,36,52,.94);
+      color: white;
+      border-radius: 9px;
+      padding: 9px 16px;
+      font-size: 17px;
+      font-weight: 500;
+      pointer-events: none;
+    }
+    .scanner-wrap::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 42%;
+      width: 260px;
+      height: 260px;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      background:
+        linear-gradient(#fff,#fff) left top / 78px 6px no-repeat,
+        linear-gradient(#fff,#fff) left top / 6px 78px no-repeat,
+        linear-gradient(#fff,#fff) right top / 78px 6px no-repeat,
+        linear-gradient(#fff,#fff) right top / 6px 78px no-repeat,
+        linear-gradient(#fff,#fff) left bottom / 78px 6px no-repeat,
+        linear-gradient(#fff,#fff) left bottom / 6px 78px no-repeat,
+        linear-gradient(#fff,#fff) right bottom / 78px 6px no-repeat,
+        linear-gradient(#fff,#fff) right bottom / 6px 78px no-repeat;
+      border-radius: 28px;
+      z-index: 5;
+    }
+    #scannerTab .grid2.mt {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: calc(92px + env(safe-area-inset-bottom) + 22px);
+      display: flex;
+      justify-content: center;
+      gap: 22px;
+      z-index: 6;
+      pointer-events: none;
+    }
+    #scannerTab .grid2.mt .btn {
+      pointer-events: auto;
+      width: 58px;
+      height: 58px;
+      min-height: 58px;
+      padding: 0;
+      border-radius: 999px;
+      font-size: 0;
+      background: rgba(0,0,0,.62);
+      border: 0;
+      color: #fff;
+    }
+    #restartCameraButton::before { content: "↻"; font-size: 27px; }
+    #scannerTab .grid2.mt .btn:nth-child(2)::before { content: "☁"; font-size: 25px; }
+    #scannerTab .grid2.mt .btn:nth-child(2) { background: var(--turq); }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: none;
+      margin-bottom: 14px;
+    }
+
+    .notice {
+      margin: 12px 20px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #fff7dc;
+      border: 1px solid #f7df9e;
+      color: #7a4b05;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    #searchTab .card {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      background: var(--page);
+    }
+    #searchTab .title, #searchTab .subtitle { display: none; }
+    #searchTab .card::before {
+      content: "Todos   Dentro   Fuera   Faltan";
+      display: block;
+      background: #eeeeef;
+      color: var(--text);
+      font-size: 19px;
+      padding: 16px 20px 14px;
+      word-spacing: 18px;
+      white-space: pre;
+    }
+    #searchInput {
+      width: calc(100% - 40px);
+      margin: 0 20px 10px;
+      min-height: 58px;
+      border-radius: 13px;
+      border: 1px solid #9aa0aa;
+      font-size: 19px;
+      background: white;
+      padding-right: 54px;
+    }
+    #searchResults { margin-top: 0; background: #fff; }
+    .search-result, .log-item {
+      padding: 18px 24px;
+      border-radius: 0;
+      border: 0;
+      border-bottom: 1px solid #d7dbe3;
+      background: #fff;
+      margin-top: 0;
+    }
+    .search-name, .log-name { font-weight: 520; font-size: 21px; line-height: 1.34; color: var(--text); }
+    .search-meta, .log-meta { color: #586275; font-size: 16px; margin-top: 4px; line-height: 1.35; }
+    .search-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+
+    #dashboardTab {
+      background: white;
+      min-height: calc(100vh - 118px - 92px);
+      padding: 26px 20px;
+    }
+    #dashboardTab > .card:first-child {
+      border: 0;
+      padding: 0;
+      margin: 0;
+      background: transparent;
+    }
+    #dashboardTab .card-title, #dashboardTab .subtitle { display: none; }
+    #dashboardTab .stats {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 0;
+    }
+    .stat {
+      border-radius: 12px;
+      padding: 18px 12px;
+      text-align: center;
+      background: #ededee;
+      border: 0;
+    }
+    .stat:nth-child(2) { background: var(--green); color: #fff; }
+    .stat-number { font-size: 36px; font-weight: 950; line-height: .95; color: inherit; }
+    .stat-label {
+      font-size: 17px;
+      text-transform: uppercase;
+      margin-top: 6px;
+      letter-spacing: .02em;
+      color: inherit;
+      font-weight: 450;
+    }
+    .dashboard-zone { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 20px; }
+    .dashboard-zone::before {
+      content: "Detalles por zona";
+      font-size: 23px;
+      font-weight: 850;
+      color: #111;
+      margin: 8px 0 4px;
+    }
+    .zone-card {
+      border-radius: 9px;
+      border: 1px solid var(--line);
+      padding: 16px;
+      background: #fff;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+    }
+    .zone-card.palco, .zone-card.salon { border-left: 0; }
+    .zone-card-title {
+      font-weight: 500;
+      font-size: 20px;
+      padding-left: 18px;
+      position: relative;
+    }
+    .zone-card-title::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: -10px;
+      bottom: -10px;
+      width: 10px;
+      border-radius: 5px;
+      background: #c9f4cb;
+    }
+    .zone-card-value {
+      min-width: 92px;
+      text-align: center;
+      font-size: 21px;
+      font-weight: 850;
+      margin-top: 0;
+      color: #111;
+      background: #ededee;
+      border-radius: 12px;
+      padding: 9px 10px;
+    }
+    #dashboardTab > .card:nth-child(2) {
+      border: 0;
+      padding: 0;
+      margin-top: 24px;
+      background: transparent;
+    }
+    #dashboardTab > .card:nth-child(2) .section-title {
+      font-size: 23px;
+      font-weight: 850;
+      margin-bottom: 14px;
+    }
+
+    #settingsTab {
+      background: white;
+      min-height: calc(100vh - 118px - 92px);
+      padding: 18px 0 28px;
+    }
+    #settingsTab > .card {
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      padding: 0;
+      margin: 0;
+    }
+    #settingsTab > .card > .title, #settingsTab > .card > .subtitle { display: none; }
+    #settingsTab > .card::before {
+      content: "●  Sincronizado\A Tu dispositivo está sincronizado";
+      white-space: pre-line;
+      display: block;
+      margin: 0 20px 22px;
+      background: var(--green-soft);
+      border-radius: 10px;
+      padding: 18px 16px;
+      color: #111;
+      font-size: 18px;
+      line-height: 1.45;
+      font-weight: 450;
+    }
+
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      min-height: 76px;
+      padding: 16px 17px;
+      border: 1px solid var(--line);
+      border-bottom-width: 0;
+      color: #111;
+      background: #fff;
+      margin: 0 20px;
+    }
+    .setting-row:nth-of-type(1) { border-radius: 11px 11px 0 0; }
+    .setting-row:nth-of-type(3), .setting-row:last-of-type {
+      border-bottom-width: 1px;
+      border-radius: 0 0 11px 11px;
+    }
+    .zone-setting { display: grid; gap: 9px; width: 100%; }
+    .zone-setting select { margin-top: 2px; font-weight: 800; }
+    .zone-required { color: var(--red); font-weight: 800; }
+
+    .switch { position: relative; width: 74px; height: 46px; flex: 0 0 auto; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; inset: 0; border-radius: 999px; background: #f0f1f5; transition: .2s; }
+    .slider:before {
+      content: "";
+      position: absolute;
+      width: 34px;
+      height: 34px;
+      left: 6px;
+      top: 6px;
+      border-radius: 50%;
+      background: white;
+      transition: .2s;
+      box-shadow: 0 2px 7px rgba(0,0,0,.12);
+    }
+    .switch input:checked + .slider { background: var(--turq); }
+    .switch input:checked + .slider:before { transform: translateX(28px); }
+
+    #settingsTab .grid2.mt { margin: 18px 20px 0; }
+    #settingsTab .btn.danger.mt {
+      width: calc(100% - 40px);
+      margin: 72px 20px 20px;
+      color: var(--red);
+      border: 1.5px solid var(--red);
+      background: #fff;
+    }
+    #preflightCard {
+      margin: 16px 20px !important;
+      border: 1px solid var(--line) !important;
+      border-radius: 11px !important;
+      background: #fff !important;
+      padding: 16px !important;
+    }
+
+    .section-title { font-size: 23px; font-weight: 900; margin-bottom: 8px; }
+    .preflight-ok { color: #087d25; }
+    .preflight-warning { color: #9d5a00; }
+
+    .result {
+      min-height: calc(100vh - 92px);
+      border-radius: 0;
+      border: 0;
+      padding: calc(28px + env(safe-area-inset-top)) 22px 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+      background: #fff;
+      color: var(--text);
+    }
+    .result.ok { background: var(--green); color: #fff; }
+    .result.simulation { background: var(--turq); color: #fff; }
+    .result.duplicate { background: #fff3d7; color: #4b3200; }
+    .result.invalid, .result.error { background: var(--red); color: #fff; }
+    .result-icon { font-size: 78px; line-height: 1; margin-bottom: 12px; }
+    .result-title { font-size: 36px; font-weight: 950; letter-spacing: -.035em; }
+    .result-name { font-size: 24px; font-weight: 750; margin-top: 12px; }
+    .zone-badge, .confirm-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 8px 15px;
+      font-size: 16px;
+      margin-top: 13px;
+      font-weight: 800;
+      background: rgba(255,255,255,.18);
+      color: inherit;
+      border: 1px solid rgba(255,255,255,.25);
+    }
+    .seat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; }
+    .seat-box, .time-box {
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 14px;
+      padding: 15px 10px;
+    }
+    .seat-label, .time-label { opacity: .78; font-size: 14px; font-weight: 800; }
+    .seat-value { font-size: 43px; font-weight: 950; line-height: 1; margin-top: 5px; }
+    .time-box { margin-top: 16px; }
+    .time-value { font-size: 19px; font-weight: 900; margin-top: 4px; }
+    .meta { opacity: .78; font-size: 13px; line-height: 1.45; margin-top: 13px; word-break: break-word; }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0,0,0,.72);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 14px;
+    }
+    .modal-card {
+      width: min(580px, 100%);
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: env(safe-area-inset-bottom);
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: min(620px, 100%);
+      height: calc(92px + env(safe-area-inset-bottom));
+      padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+      background: #eeeeef;
+      border-top: 1px solid #d9d9dc;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      z-index: 2147483647;
+      pointer-events: auto;
+    }
+    .nav-btn {
+      border: 0;
+      background: transparent;
+      color: #222934;
+      border-radius: 12px;
+      padding: 6px 2px;
+      min-height: 72px;
+      font-size: 15px;
+      font-weight: 450;
+      display: grid;
+      justify-items: center;
+      align-content: center;
+      gap: 4px;
+      position: relative;
+      z-index: 2147483647;
+      touch-action: manipulation;
+    }
+    .nav-btn .nav-icon { display: block; font-size: 29px; line-height: 1; margin-bottom: 0; }
+    .nav-btn.active { color: var(--turq); background: transparent; }
+
+    @media (max-width: 430px) {
+      #scannerTab > .card:first-child > .sync-row:first-child .title { max-width: 250px; }
+      #deviceLabel { font-size: 36px; }
+      .search-name { font-size: 19px; }
+      .search-meta { font-size: 15px; }
+      .nav-btn { font-size: 13px; }
+    }
+
   </style>
 </head>
 
 <body>
-  <section id="loginView" class="login">
-    <div class="login-card">
-      <div class="login-logo">▦</div>
-      <div class="login-title">Control de entradas</div>
-      <div class="login-subtitle">Carga tu dispositivo y empieza a validar accesos.</div>
+  <div class="app">
+    <section id="loginView" class="card">
+      <div class="title">Control de entradas</div>
+      <div class="subtitle">Carga tu dispositivo y empieza a validar accesos.</div>
 
       <div class="mt">
         <input id="deviceNameInput" type="text" maxlength="60" placeholder="Usuario del agente / dispositivo">
@@ -205,156 +622,122 @@
         <button type="button" id="loginButton" class="btn" onclick="login()">Iniciar control</button>
       </div>
 
-      <div class="small-text mt">Versión 1.</div>
-    </div>
-  </section>
+      <div class="small-text mt">La lista se guarda localmente en este dispositivo para que el escaneo sea instantáneo.</div>
+    </section>
 
-  <div id="appView" class="app hidden">
-    <header class="top-shell">
-      <div>
-        <div id="eventTitle" class="event-title">Control de entradas</div>
-        <div class="big-count"><span id="usedStat">-</span>/<span id="totalStat">-</span></div>
-        <div class="hidden-stats"><span id="pendingStat">-</span></div>
-      </div>
-
-      <div class="top-actions">
-        <div id="syncBadge" class="sync-badge syncing" title="Estado de sincronización">
-          <span class="sync-dot"></span><span id="syncText">Sincronizando...</span>
-        </div>
-        <button type="button" class="icon-btn" onclick="syncNow(true)" aria-label="Sincronizar">↻</button>
-        <button type="button" id="navDashboard" class="icon-btn" data-tab="dashboard" aria-label="Estadísticas">▥</button>
-        <button type="button" id="navSettings" class="icon-btn" data-tab="settings" aria-label="Ajustes">⚙</button>
-      </div>
-    </header>
-
-    <main id="mainApp">
-      <section id="manualTab" class="tab-view page hidden">
-        <div class="manual-wrap">
-          <div class="manual-center">
+    <main id="mainApp" class="hidden">
+      <section id="scannerTab" class="tab-view">
+        <div class="card">
+          <div class="sync-row" style="margin-top:0">
             <div>
-              <div class="manual-label">Introduce el código de barras</div>
-              <input id="manualCodeInput" class="manual-input mt" type="text" inputmode="text" placeholder="EV26-XXXX-XXXX">
+              <div class="title">Escanear</div>
+              <div id="deviceLabel" class="subtitle"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px">
+              <div id="modeBadge" class="mode-badge">MODO REAL</div>
+              <div id="accessZoneBadge" class="access-zone-badge">ZONA SIN CONFIGURAR</div>
             </div>
           </div>
-          <button type="button" id="manualValidateButton" class="btn" onclick="validateManualCodeFromInput()">Validar</button>
+
+          <div class="stats mt">
+            <div class="stat">
+              <div id="totalStat" class="stat-number">-</div>
+              <div class="stat-label">Total</div>
+            </div>
+            <div class="stat">
+              <div id="usedStat" class="stat-number">-</div>
+              <div class="stat-label">Dentro</div>
+            </div>
+            <div class="stat">
+              <div id="pendingStat" class="stat-number">-</div>
+              <div class="stat-label">Pendientes</div>
+            </div>
+          </div>
+
+          <div class="sync-row">
+            <div id="syncBadge" class="sync-badge syncing">
+              <span class="sync-dot"></span>
+              <span id="syncText">Sincronizando...</span>
+            </div>
+            <span id="lastSyncText" class="small-text">Sin datos</span>
+          </div>
+
+          <div id="pendingNotice" class="notice hidden"></div>
+
+          <div class="scanner-wrap">
+            <div id="reader"></div>
+          </div>
+
+          <div class="grid2 mt">
+            <button type="button" id="restartCameraButton" class="btn secondary small" onclick="restartScanner()">Reiniciar cámara</button>
+            <button type="button" class="btn secondary small" onclick="syncNow(true)">Forzar sincronización</button>
+          </div>
         </div>
       </section>
 
-      <section id="scannerTab" class="tab-view page hidden">
-        <div class="scanner-wrap">
-          <div id="reader"></div>
-          <div class="scanner-overlay">
-            <div class="scan-mode-pill">Modo ENTRADA</div>
-            <div class="scan-frame"><div class="scan-corners"></div></div>
-          </div>
-          <div class="scanner-controls">
-            <button type="button" class="round-control" onclick="toggleSimulationMode()" aria-label="Modo simulacro">⌁</button>
-            <button type="button" id="restartCameraButton" class="round-control primary" onclick="restartScanner()" aria-label="Reiniciar cámara">↻</button>
-          </div>
+      <section id="searchTab" class="tab-view hidden">
+        <div class="card">
+          <div class="title">Buscar entrada</div>
+          <div class="subtitle">Busca por nombre, código, zona, fila o butaca.</div>
+          <input id="searchInput" class="mt" type="search" placeholder="Escribe para buscar..." oninput="renderSearchResults()">
+          <div id="searchResults" class="mt"></div>
         </div>
       </section>
 
-      <section id="searchTab" class="tab-view page hidden">
-        <div class="search-tabs">
-          <button type="button" class="seg-btn active" data-filter="all">Todos</button>
-          <button type="button" class="seg-btn" data-filter="inside">Dentro</button>
-          <button type="button" class="seg-btn" data-filter="outside">Fuera</button>
-          <button type="button" class="seg-btn" data-filter="missing">Faltan</button>
+      <section id="dashboardTab" class="tab-view hidden">
+        <div class="card">
+          <div class="sync-row" style="margin-top:0">
+            <div>
+              <div class="title">Resumen</div>
+              <div class="subtitle">Estado general del acceso.</div>
+            </div>
+            <button type="button" class="btn secondary small inline" onclick="loadDashboard()">Actualizar</button>
+          </div>
+
+          <div class="stats mt">
+            <div class="stat">
+              <div id="dashTotal" class="stat-number">-</div>
+              <div class="stat-label">Total</div>
+            </div>
+            <div class="stat">
+              <div id="dashUsed" class="stat-number">-</div>
+              <div class="stat-label">Dentro</div>
+            </div>
+            <div class="stat">
+              <div id="dashDevices" class="stat-number">-</div>
+              <div class="stat-label">Dispositivos</div>
+            </div>
+          </div>
+
+          <div class="dashboard-zone">
+            <div class="zone-card salon">
+              <div class="zone-card-title">SALÓN</div>
+              <div id="dashSalon" class="zone-card-value">-</div>
+              <div id="dashSalonPending" class="small-text"></div>
+            </div>
+            <div class="zone-card palco">
+              <div class="zone-card-title">PALCO</div>
+              <div id="dashPalco" class="zone-card-value">-</div>
+              <div id="dashPalcoPending" class="small-text"></div>
+            </div>
+          </div>
         </div>
 
-        <div class="search-box">
-          <input id="searchInput" type="search" placeholder="Apellidos, nombre, código de barras" oninput="renderSearchResults()">
-          <span class="search-icon">⌕</span>
-        </div>
-
-        <div id="searchResults" class="list-content"></div>
-      </section>
-
-      <section id="dashboardTab" class="tab-view page hidden">
-        <div class="dashboard-page">
-          <div class="stat-large">
-            <div id="dashTotal" class="num">-</div>
-            <div class="label">Asistentes</div>
-          </div>
-
-          <div class="stat-large green">
-            <div id="dashUsed" class="num">-</div>
-            <div class="label">Escaneado entrada</div>
-          </div>
-
-          <div class="dashboard-title">Detalles por zona</div>
-
-          <div class="tariff-card">
-            <div class="tariff-head">
-              <span>Control de entradas</span>
-              <span>⌄</span>
-            </div>
-            <div class="tariff-row">
-              <div class="tariff-name">Salón principal</div>
-              <div id="dashSalonUsed" class="pill-num green">-</div>
-              <div id="dashSalonTotal" class="pill-num">-</div>
-              <div id="dashSalonPct" class="pill-num">%</div>
-            </div>
-            <div class="tariff-row">
-              <div class="tariff-name">Palco</div>
-              <div id="dashPalcoUsed" class="pill-num green">-</div>
-              <div id="dashPalcoTotal" class="pill-num">-</div>
-              <div id="dashPalcoPct" class="pill-num">%</div>
-            </div>
-          </div>
-
-          <div class="dashboard-title">Últimos movimientos</div>
+        <div class="card">
+          <div class="section-title">Últimos movimientos</div>
           <div id="recentLogs"></div>
-
-          <div class="hidden"><span id="dashDevices">-</span></div>
         </div>
       </section>
 
-      <section id="settingsTab" class="tab-view page hidden">
-        <div class="status-ok">
-          <span class="dot"></span>
-          <div>
-            <strong>Sincronizado</strong>
-            <span>Tu dispositivo está sincronizado</span>
-          </div>
-        </div>
+      <section id="settingsTab" class="tab-view hidden">
+        <div class="card">
+          <div class="title">Ajustes</div>
+          <div class="subtitle">Opciones del dispositivo y herramientas de coordinación.</div>
 
-        <div class="settings-card">
-          <div class="setting-row">
-            <div class="leading">
-              <div class="setting-icon">◉</div>
-              <div>
-                <div class="setting-main">Usuario del agente</div>
-                <div id="settingsDeviceName" class="setting-sub"></div>
-              </div>
-            </div>
-            <div class="chevron">›</div>
-          </div>
-
-          <div class="setting-row">
-            <div class="leading">
-              <div class="setting-icon">●</div>
-              <div>
-                <div class="setting-main">Zona de acceso</div>
-                <div id="accessZoneHelp" class="setting-sub">Debes seleccionar Patio o Palco antes de escanear.</div>
-              </div>
-            </div>
-            <select id="accessZoneSelect" onchange="changeAccessZone()" style="max-width:150px;min-height:48px;font-size:16px">
-              <option value="">Zona...</option>
-              <option value="PATIO">Patio</option>
-              <option value="PALCO">Palco</option>
-              <option value="TODAS">Todas</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="setting-title">Opciones avanzadas</div>
-
-        <div class="settings-card">
-          <div class="setting-row">
+          <div class="setting-row mt">
             <div>
-              <div class="setting-main">Escáner en modo SALIDA</div>
-              <div class="setting-sub">Gestiona salidas o pruebas sin marcar entradas</div>
+              <div style="font-weight:900">Modo simulacro</div>
+              <div class="small-text">Valida y registra pruebas sin marcar entradas.</div>
             </div>
             <label class="switch">
               <input id="simulationToggle" type="checkbox" onchange="toggleSimulationMode()">
@@ -363,73 +746,63 @@
           </div>
 
           <div class="setting-row">
-            <div>
-              <div class="setting-main">Estado del lector</div>
-              <div class="setting-sub">
-                <span id="modeBadge">MODO REAL</span>
-                <span id="accessZoneBadge" class="access-zone-badge">ZONA SIN CONFIGURAR</span>
-                <span id="lastSyncText">Sin datos</span>
+            <div class="zone-setting">
+              <div>
+                <div style="font-weight:900">Zona de acceso</div>
+                <div class="small-text">Este móvil solo aceptará entradas de la zona elegida.</div>
               </div>
+              <select id="accessZoneSelect" onchange="changeAccessZone()">
+                <option value="">Selecciona una zona...</option>
+                <option value="PATIO">Patio</option>
+                <option value="PALCO">Palco</option>
+                <option value="TODAS">Todas · solo incidencias</option>
+              </select>
+              <div id="accessZoneHelp" class="small-text zone-required">Debes seleccionar Patio o Palco antes de escanear.</div>
             </div>
           </div>
+
+          <div class="setting-row">
+            <div>
+              <div style="font-weight:900">Dispositivo</div>
+              <div id="settingsDeviceName" class="small-text"></div>
+            </div>
+          </div>
+
+          <div class="grid2 mt">
+            <button type="button" class="btn secondary small" onclick="syncNow(true)">Actualizar lista completa</button>
+            <button type="button" class="btn secondary small" onclick="runPreflight()">Comprobar sistema</button>
+          </div>
+
+          <div class="grid2 mt">
+            <button type="button" class="btn secondary small" onclick="createBackupFromApp()">Crear copia de seguridad</button>
+            <button type="button" class="btn secondary small" onclick="showUndoModal(lastAcceptedCode)">Deshacer último acceso</button>
+          </div>
+
+          <button type="button" class="btn danger mt" onclick="logout()">Cerrar sesión</button>
         </div>
 
-        <div id="pendingNotice" class="notice hidden" style="margin:14px 20px"></div>
-
-        <div class="setting-title">Herramientas</div>
-
-        <div class="settings-card">
-          <div class="setting-row" onclick="syncNow(true)">
-            <div class="leading"><div class="setting-icon">↻</div><div class="setting-main">Actualizar lista completa</div></div>
-            <div class="chevron">›</div>
-          </div>
-          <div class="setting-row" onclick="runPreflight()">
-            <div class="leading"><div class="setting-icon">✓</div><div class="setting-main">Comprobar sistema</div></div>
-            <div class="chevron">›</div>
-          </div>
-          <div class="setting-row" onclick="createBackupFromApp()">
-            <div class="leading"><div class="setting-icon">□</div><div class="setting-main">Crear copia de seguridad</div></div>
-            <div class="chevron">›</div>
-          </div>
-          <div class="setting-row" onclick="showUndoModal(lastAcceptedCode)">
-            <div class="leading"><div class="setting-icon">↶</div><div class="setting-main">Deshacer último acceso</div></div>
-            <div class="chevron">›</div>
-          </div>
-        </div>
-
-        <div id="preflightCard" class="settings-card hidden" style="padding:16px">
+        <div id="preflightCard" class="card hidden">
           <div class="section-title">Comprobación del sistema</div>
           <div id="preflightContent"></div>
         </div>
-
-        <div class="danger-bottom">
-          <button type="button" class="btn danger" onclick="logout()">Cerrar la sesión de control</button>
-        </div>
-
-        <div class="small-text" style="text-align:center;margin-bottom:25px">v2.1 · Control de entradas</div>
       </section>
     </main>
 
     <section id="resultView" class="hidden">
       <div id="resultBox" class="result ok"></div>
-      <div class="grid2" style="padding:12px 14px 20px;background:white">
+      <div class="grid2 mt">
         <button type="button" id="resultUndoButton" class="btn secondary" onclick="showUndoModal(currentResultCode)">Deshacer</button>
         <button type="button" class="btn" onclick="nextScan()">Siguiente</button>
       </div>
     </section>
-
-    <nav id="bottomNav" class="bottom-nav">
-      <button type="button" id="navManual" class="nav-btn" data-tab="manual">
-        <span class="nav-icon">▦</span>Manual
-      </button>
-      <button type="button" id="navScanner" class="nav-btn active" data-tab="scanner">
-        <span class="nav-icon">▣</span>Escáner
-      </button>
-      <button type="button" id="navSearch" class="nav-btn" data-tab="search">
-        <span class="nav-icon">⌕</span>Lista
-      </button>
-    </nav>
   </div>
+
+  <nav id="bottomNav" class="bottom-nav hidden">
+    <button type="button" id="navScanner" class="nav-btn active" data-tab="scanner"><span class="nav-icon">▣</span>Escanear</button>
+    <button type="button" id="navSearch" class="nav-btn" data-tab="search"><span class="nav-icon">⌕</span>Buscar</button>
+    <button type="button" id="navDashboard" class="nav-btn" data-tab="dashboard"><span class="nav-icon">▤</span>Resumen</button>
+    <button type="button" id="navSettings" class="nav-btn" data-tab="settings"><span class="nav-icon">⚙</span>Ajustes</button>
+  </nav>
 
   <div id="undoModal" class="modal hidden">
     <div class="modal-card">
@@ -445,7 +818,6 @@
   </div>
 
   <script>
-
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyXGG5TQd8qmr7yS_HV2OuVGHpf3slXDhi1EJXJPR_hh0kqU7Iyo3Lwz-dLtHwJ4n52/exec'
 
     const KEYS = {
@@ -507,7 +879,7 @@
     window.addEventListener('offline', () => setSyncStatus('offline', 'Sin conexión'))
 
     function bindBottomNavigation() {
-      document.querySelectorAll('[data-tab]').forEach(button => {
+      document.querySelectorAll('.nav-btn[data-tab]').forEach(button => {
         button.addEventListener('click', event => {
           event.preventDefault()
           event.stopPropagation()
@@ -673,7 +1045,7 @@
     }
 
     function showTab(tab) {
-      const validTabs = ['manual', 'scanner', 'search', 'dashboard', 'settings']
+      const validTabs = ['scanner', 'search', 'dashboard', 'settings']
       if (!validTabs.includes(tab)) return
 
       document.getElementById('resultView').classList.add('hidden')
@@ -1849,191 +2221,6 @@
     function playError() {
       tone(250, .34, .25)
     }
-  
-
-
-/* ===== Ajustes de interfaz estilo WeezAccess ===== */
-
-let listFilterMode = 'all'
-
-function setListFilter(mode) {
-  listFilterMode = mode || 'all'
-
-  document.querySelectorAll('.seg-btn[data-filter]').forEach(button => {
-    button.classList.toggle('active', button.dataset.filter === listFilterMode)
-  })
-
-  renderSearchResults()
-}
-
-function getFilteredListTickets() {
-  const values = Object.values(tickets || {})
-
-  if (listFilterMode === 'inside') return values.filter(ticket => ticket.used)
-  if (listFilterMode === 'outside') return values.filter(ticket => !ticket.used)
-  if (listFilterMode === 'missing') return values.filter(ticket => !ticket.used)
-
-  return values
-}
-
-function validateManualCodeFromInput() {
-  const input = document.getElementById('manualCodeInput')
-  const value = input ? input.value.trim() : ''
-
-  if (!value) return
-
-  manualCheckIn(normalizeCode(value))
-
-  if (input) input.value = ''
-}
-
-function updateWeezTopTitle() {
-  const eventTitle = document.getElementById('eventTitle')
-  if (!eventTitle) return
-
-  const zone = accessZoneLabel(accessZone)
-  eventTitle.textContent = zone && zone !== 'ZONA SIN CONFIGURAR'
-    ? 'CONTROL DE ENTRADAS · ' + zone
-    : 'CONTROL DE ENTRADAS'
-}
-
-/* Sobrescribimos renderAccessZone para conservar la lógica original y refrescar cabecera. */
-const __originalRenderAccessZone = renderAccessZone
-renderAccessZone = function() {
-  __originalRenderAccessZone()
-  updateWeezTopTitle()
-}
-
-/* Sobrescribimos renderSearchResults solo para que la Lista tenga estética tipo WeezAccess. */
-renderSearchResults = function() {
-  const container = document.getElementById('searchResults')
-  const input = document.getElementById('searchInput')
-
-  if (!container || !input) return
-
-  const query = normalizeSearch(input.value)
-
-  let source = getFilteredListTickets()
-
-  if (query) {
-    source = source.filter(ticket => {
-      const haystack = normalizeSearch([
-        ticket.code,
-        ticket.nombre || ticket.estudiante,
-        ticket.nombre,
-        ticket.zona,
-        'fila ' + ticket.fila,
-        'butaca ' + ticket.butaca,
-        ticket.fila,
-        ticket.butaca
-      ].join(' '))
-
-      return haystack.includes(query)
-    })
-  }
-
-  const results = source
-    .sort((a, b) => {
-      const an = normalizeSearch(a.nombre || a.estudiante || '')
-      const bn = normalizeSearch(b.nombre || b.estudiante || '')
-      return an.localeCompare(bn)
-    })
-    .slice(0, 120)
-
-  if (!results.length) {
-    container.innerHTML = '<div class="empty-list">No se ha encontrado ninguna entrada.</div>'
-    return
-  }
-
-  let lastLetter = ''
-
-  container.innerHTML = results.map(ticket => {
-    const name = ticket.nombre || ticket.estudiante || 'Sin nombre'
-    const letter = normalizeSearch(name).charAt(0).toUpperCase() || '#'
-    const showLetter = letter !== lastLetter
-    lastLetter = letter
-
-    return `
-      ${showLetter ? `<div class="section-letter">${escapeHtml(letter)}</div>` : ''}
-      <div class="search-result ${ticket.used ? 'used' : 'pending'}">
-        <div class="search-name">${escapeHtml(name)}</div>
-        <div class="search-meta">
-          ${escapeHtml(ticket.zona || '')}
-          ${ticket.fila ? ' · Fila ' + escapeHtml(ticket.fila) : ''}
-          ${ticket.butaca ? ' · Butaca ' + escapeHtml(ticket.butaca) : ''}
-          <br>
-          ${ticket.used ? 'Dentro' : 'Fuera'} · ${escapeHtml(ticket.code || '')}
-        </div>
-        <div class="search-actions">
-          <button type="button" class="btn small ${ticket.used ? 'secondary' : ''}" onclick="manualCheckIn('${escapeJs(ticket.code)}')">${ticket.used ? 'Ver estado' : 'Validar'}</button>
-          <button type="button" class="btn secondary small" onclick="showUndoModal('${escapeJs(ticket.code)}')">Deshacer</button>
-        </div>
-      </div>
-    `
-  }).join('')
-}
-
-/* Sobrescribimos loadDashboard para pintar tarjetas tipo estadísticas. */
-loadDashboard = function() {
-  callAppsScript('dashboard', { token }, res => {
-    if (!res || res.status !== 'OK') {
-      handleApiSessionError(res)
-      return
-    }
-
-    const stats = res.stats || {}
-    const salonUsed = Number(stats.salon?.used || 0)
-    const salonTotal = Number(stats.salon?.total || 0)
-    const palcoUsed = Number(stats.palco?.used || 0)
-    const palcoTotal = Number(stats.palco?.total || 0)
-
-    const total = Number(stats.total || 0)
-    const used = Number(stats.used || 0)
-
-    document.getElementById('dashTotal').textContent = total || '-'
-    document.getElementById('dashUsed').textContent = used || '0'
-    document.getElementById('dashDevices').textContent = stats.activeDevices ?? '-'
-
-    document.getElementById('dashSalonUsed').textContent = salonUsed
-    document.getElementById('dashSalonTotal').textContent = salonTotal
-    document.getElementById('dashSalonPct').textContent = salonTotal ? Math.round(salonUsed / salonTotal * 100) + ' %' : '0 %'
-
-    document.getElementById('dashPalcoUsed').textContent = palcoUsed
-    document.getElementById('dashPalcoTotal').textContent = palcoTotal
-    document.getElementById('dashPalcoPct').textContent = palcoTotal ? Math.round(palcoUsed / palcoTotal * 100) + ' %' : '0 %'
-
-    const logs = res.recentLogs || []
-    document.getElementById('recentLogs').innerHTML = logs.length
-      ? logs.map(log => `
-        <div class="log-item">
-          <div class="log-name">${escapeHtml(log.estudiante || log.result)}</div>
-          <div class="log-meta">
-            ${escapeHtml(log.result)}
-            ${log.zona ? ' · ' + escapeHtml(log.zona) : ''}
-            ${log.fila ? ' · Fila ' + escapeHtml(log.fila) : ''}
-            ${log.butaca ? ' · Butaca ' + escapeHtml(log.butaca) : ''}
-            <br>${escapeHtml(log.date || '')} · ${escapeHtml(log.deviceName || '')}
-          </div>
-        </div>
-      `).join('')
-      : '<div class="empty-list">Todavía no hay movimientos registrados.</div>'
-  })
-}
-
-/* Enter en manual. */
-window.addEventListener('load', () => {
-  const manual = document.getElementById('manualCodeInput')
-  if (manual) {
-    manual.addEventListener('keydown', event => {
-      if (event.key === 'Enter') validateManualCodeFromInput()
-    })
-  }
-
-  document.querySelectorAll('.seg-btn[data-filter]').forEach(button => {
-    button.addEventListener('click', () => setListFilter(button.dataset.filter))
-  })
-})
-
   </script>
 </body>
 </html>
